@@ -45,13 +45,13 @@ class UnderSearchFragment() : Fragment() {
         recyclerViewPopular = myView.findViewById(R.id.recyclerViewPopular)
         sPref = requireContext().getSharedPreferences(POPULAR_LIST, Context.MODE_PRIVATE)
 
-        settingPopularList()
+        settingHistoryList()
         updatePopularList()
 
         return myView
     }
 
-    private fun settingPopularList(){
+    private fun settingHistoryList(){
         recyclerViewHistory.layoutManager = StaggeredGridLayoutManager(2, LinearLayoutManager.HORIZONTAL)
         if(sPref.contains(TICKERS)){
             lstHistory = ArrayList(sPref.getString(TICKERS, "")!!.split("$"))
@@ -61,8 +61,11 @@ class UnderSearchFragment() : Fragment() {
         }else{
             textViewHistory.visibility = View.VISIBLE
             adapterHistory = RecyclerViewHorizontal(lstHistory)
+            adapterHistory.flagOnLongClick = true
             recyclerViewHistory.adapter = adapterHistory
         }
+
+
     }
 
     private fun saveList(){

@@ -1,6 +1,8 @@
 package com.example.yandextest
 
 import android.content.Context
+import android.util.Log
+import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
@@ -37,40 +39,62 @@ class SectionsPagerAdapter(private val context: Context, fm: FragmentManager)
     }
 
     override fun getCount(): Int {
-        return 2
+        return TAB_TITLES.count()
     }
 
 
 
 }
 
-class SectionsPagerAdapterChart(fm: FragmentManager, private var ticker : String)
+class SectionsPagerAdapterChart(fm: FragmentManager, private var ticker : String, private var context: Context)
     : FragmentPagerAdapter(fm) {
 
     val TAB_TITLES = arrayOf(
         R.string.chart,
         R.string.summary,
-        R.string.forecasts,
-        R.string.news,
-        R.string.gloabalNews
+        R.string.recommendation,
+        R.string.newsSentiment,
+        R.string.news
             )
 
+    var arrayFragment = ArrayList<Fragment>()
+    private var currencySymbol : String = ""
+
     override fun getItem(position: Int): Fragment {
-        return if(position == 0) {
-            FragmentChart.newInstance(ticker)
-        }else if(position == 1){
-            FragmentInformation.newInstance(ticker, "summary")
-        }else{
-            FragmentInformation.newInstance(ticker, "")
+        if(arrayFragment.count() == 0){
+            for(i in (0 until 5)){
+                val fragment = if(i == 0) {
+                    val fragmentChart =  FragmentChart.newInstance(ticker)
+                    fragmentChart.currencySymbol = currencySymbol
+                    fragmentChart
+                }else{
+                    FragmentInformation.newInstance(ticker, context.resources.getString(TAB_TITLES[i]))
+                }
+
+                arrayFragment.add(fragment)
+            }
         }
+        return arrayFragment[position]
 
     }
+
+    override fun destroyItem(container: ViewGroup, position: Int, `object`: Any) {
+
+    }
+
+    public fun setCurrency(symbolCurrency : String){
+        if(arrayFragment.count() > 0) {
+            (arrayFragment[0] as FragmentChart).currencySymbol = symbolCurrency
+            currencySymbol = symbolCurrency
+        }else{
+            currencySymbol = symbolCurrency
+        }
+    }
+
 
     override fun getCount(): Int {
-        return 5
+        return TAB_TITLES.count()
     }
-
-
 
 }
 

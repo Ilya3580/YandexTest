@@ -26,6 +26,8 @@ import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
 import okhttp3.*
 import org.json.JSONObject
 import java.io.IOException
+import java.util.*
+import kotlin.collections.ArrayList
 
 class FragmentChart(private var ticker : String) : Fragment() {
 
@@ -36,8 +38,22 @@ class FragmentChart(private var ticker : String) : Fragment() {
     private lateinit var client : OkHttpClient
     private lateinit var lstEntry : ArrayList<Entry>
     private lateinit var viewModelWebSocket : MyViewModel<Boolean>
-    private lateinit var textView : TextView
+    private var textView : TextView? = null
+
+    private var enterCurrency = ""
+    private var _currencySymbol = ""
+    public var currencySymbol : String
+        get() {return _currencySymbol}
+        set(value) {
+            _currencySymbol = value
+            if(textView != null)
+                textView!!.text = textView!!.text.toString() + enterCurrency + _currencySymbol
+
+        }
+
     private var idElement= 0
+
+
 
     companion object {
 
@@ -47,14 +63,16 @@ class FragmentChart(private var ticker : String) : Fragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
-        if(requireContext().resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT){
-            myView = inflater.inflate(R.layout.fragment_chart_verical, container, false)
+        retainInstance = true
+        myView = if(requireContext().resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT){
+            enterCurrency = " "
+            inflater.inflate(R.layout.fragment_chart_verical, container, false)
         }else{
-            myView = inflater.inflate(R.layout.fragment_chart_horizontal, container, false)
+            enterCurrency = "\n"
+            inflater.inflate(R.layout.fragment_chart_horizontal, container, false)
         }
         mLineChart = myView.findViewById(R.id.graph)
         textView = myView.findViewById(R.id.price)
-        retainInstance = true
 
         viewModelWebSocket = MyViewModel(false)
         lstEntry = ArrayList()
@@ -75,7 +93,6 @@ class FragmentChart(private var ticker : String) : Fragment() {
         viewModelWebSocket.getUsersValue().observe(viewLifecycleOwner, Observer {
             if(it) {
                 updateDataChart()
-                textView.text = lstEntry[lstEntry.count() - 1].y.toString()
                 viewModelWebSocket.user = false
             }
         })
@@ -211,7 +228,7 @@ class FragmentChart(private var ticker : String) : Fragment() {
         val handler = Handler(Looper.getMainLooper())
         handler.post {
             if(lstEntry.count() - 1 >= 0)
-                textView.text = lstEntry[lstEntry.count() - 1].y.toString()
+                textView!!.text = lstEntry[lstEntry.count() - 1].y.toString() + enterCurrency + _currencySymbol
 
             val data = LineData(dataSet)
             mLineChart.data = data

@@ -16,6 +16,8 @@ import androidx.viewpager.widget.ViewPager
 import com.google.android.material.tabs.TabLayout
 import okhttp3.*
 import java.io.IOException
+import java.util.*
+import kotlin.collections.ArrayList
 
 
 class ChartActivity : AppCompatActivity() {
@@ -69,9 +71,11 @@ class ChartActivity : AppCompatActivity() {
 
         buttonStar.setOnClickListener {
             if(flagFavorite){
+                flagFavorite = false
                 buttonStar.setImageDrawable(resources.getDrawable(android.R.drawable.btn_star_big_off))
                 functionsTickers.delayTickersFavorites(ticker, applicationContext)
             }else{
+                flagFavorite = true
                 buttonStar.setImageDrawable(resources.getDrawable(android.R.drawable.btn_star_big_on))
                 functionsTickers.saveTickersFavorites(ticker, applicationContext)
             }
@@ -88,7 +92,7 @@ class ChartActivity : AppCompatActivity() {
     }
 
     private fun onCreateViewPager() {
-        sectionsPagerAdapter = SectionsPagerAdapterChart(supportFragmentManager, ticker)
+        sectionsPagerAdapter = SectionsPagerAdapterChart(supportFragmentManager, ticker, applicationContext)
         viewPager.adapter = sectionsPagerAdapter
 
         tabs = findViewById(R.id.tabsChart)
@@ -157,8 +161,22 @@ class ChartActivity : AppCompatActivity() {
                     classRequests.parsTickersData(body, lst, applicationContext)
                     cellInformation = lst[lst.count() - 1]
 
+
+
                     val handler = Handler(Looper.getMainLooper())
                     handler.post {
+                        var currency : Currency
+                        var symbolCurrency : String = ""
+                        try {
+                            if (cellInformation.currency != "null") {
+                                currency = Currency.getInstance(cellInformation.currency)
+                                symbolCurrency = currency.symbol
+                            }
+                        }catch (e : Exception){
+                            Log.d("TAGA", cellInformation.currency)
+                        }
+
+                        sectionsPagerAdapter.setCurrency(symbolCurrency)
                         loadAppBar()
                     }
                 }
@@ -180,27 +198,5 @@ class ChartActivity : AppCompatActivity() {
         textViewTicker.text = cellInformation.ticker
         textViewCompany.text = cellInformation.company
     }
-
-    /*class SwipeLockableViewPager(context: Context, attrs: AttributeSet): ViewPager(context, attrs) {
-        private var swipeEnabled = false
-
-        override fun onTouchEvent(event: MotionEvent): Boolean {
-            return when (swipeEnabled) {
-                true -> super.onTouchEvent(event)
-                false -> false
-            }
-        }
-
-        override fun onInterceptTouchEvent(event: MotionEvent): Boolean {
-            return when (swipeEnabled) {
-                true -> super.onInterceptTouchEvent(event)
-                false -> false
-            }
-        }
-
-        fun setSwipePagingEnabled(swipeEnabled: Boolean) {
-            this.swipeEnabled = swipeEnabled
-        }
-    }*/
 
 }

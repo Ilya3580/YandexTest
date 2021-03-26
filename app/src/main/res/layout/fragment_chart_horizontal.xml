@@ -164,24 +164,6 @@
             </androidx.cardview.widget.CardView>
         </GridLayout>
 
-        <androidx.cardview.widget.CardView
-            android:layout_width="match_parent"
-            android:layout_height="40dp"
-            app:cardCornerRadius="10dp"
-            android:layout_marginRight="5dp"
-            android:layout_marginBottom="5dp"
-            card_view:elevation="0dp"
-            >
-            <TextView
-                android:gravity="center"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@color/black"
-                android:text="Buy for $132.04"
-                android:textColor="@color/white"
-                android:textSize="15sp"
-                />
-        </androidx.cardview.widget.CardView>
     </LinearLayout>
 
 

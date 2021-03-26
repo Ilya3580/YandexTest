@@ -1,9 +1,9 @@
 <resources>
     <string name="chart">Chart</string>
     <string name="summary">Summary</string>
+    <string name="recommendation">Recommendation</string>
+    <string name="newsSentiment">News Sentiment</string>
     <string name="news">News</string>
-    <string name="forecasts">Forecasts</string>
-    <string name="gloabalNews">Global News</string>
     <string name="tab_text_1">Stocks</string>
     <string name="tab_text_2">Favourite</string>
     <string name="app_name">YandexTest</string>
