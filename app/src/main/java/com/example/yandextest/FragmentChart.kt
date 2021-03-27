@@ -172,19 +172,20 @@ class FragmentChart(private var ticker : String) : Fragment() {
     private fun parsHistoryData(text : String, period: String){
         val json = JSONObject(text)
         val jsonArray = json.getJSONObject("items")
-        val lstDataRequestChartClass = ArrayList<DataRequestChartClass>()
+        var lstDataRequestChartClass = ArrayList<StickChartInformation>()
         for(i in (0 until jsonArray.names().length())){
             val nameJson = jsonArray.getJSONObject(jsonArray.names()[i].toString())
-            val dateCode =  jsonArray.names()[i].toString()
-            val date = nameJson.get("date").toString()
-            val open = nameJson.get("open")
-            val close = nameJson.get("close")
-            val price = (close.toString().toDouble() + open.toString().toDouble())/2
-            lstDataRequestChartClass.add(DataRequestChartClass(dateCode, date, price.toFloat()))
+            val date = jsonArray.names()[i].toString().toInt()
+            val high = nameJson.get("high").toString().toFloat()
+            val low = nameJson.get("low").toString().toFloat()
+            val open = nameJson.get("open").toString().toFloat()
+            val close = nameJson.get("close").toString().toFloat()
+            lstDataRequestChartClass.add(StickChartInformation(date, open, high, low, close))
         }
 
+        lstDataRequestChartClass = StickChartInformation.convertListPeriod(period, lstDataRequestChartClass)
+        lstEntry = StickChartInformation.revertListEntry(lstDataRequestChartClass)
 
-        lstEntry = DataRequestChartClass.convertListEntry(period, lstDataRequestChartClass)
         updateDataChart()
 
         startWebSocket()
