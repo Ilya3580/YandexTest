@@ -187,10 +187,8 @@ class FragmentRecyclerViewSection(
     }
 
     private fun settingStocks(){
-        //TODO убрать комент
-        //lst.clear()
-        //loadTickers()
-        notInternet()
+        lst.clear()
+        loadTickers()
 
     }
 
@@ -231,7 +229,7 @@ class FragmentRecyclerViewSection(
                             break
                         }
                     }
-                })/*.start()*///TODO убрать комент
+                }).start()
             }
             flagShowNotInternet = true
         }

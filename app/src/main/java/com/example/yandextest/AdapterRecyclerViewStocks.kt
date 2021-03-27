@@ -139,7 +139,12 @@ open class AdapterRecyclerViewStocks(private val values: ArrayList<CellInformati
             symbol = "-"
         }else{
             symbol = "+"
-            number = cellInformation.differencePrice.trim().toDouble()
+            try {
+                number = cellInformation.differencePrice.toDouble()
+            }catch (e : Exception){
+                number = 0.0
+            }
+
             percent = cellInformation.differencePricePercent.toDouble()
             differencePriceTextView.setTextColor(context.resources.getColor(R.color.green))
         }

@@ -47,6 +47,8 @@ class FragmentChart(private var ticker : String) : Fragment() {
     var symbolPeriod = "D"
 
     private lateinit var sPref : SharedPreferences
+    private val CHART = "CHART"
+    private val SYMBOL_DAY = "SYMBOL_DAY"
     private val CANDLE_OR_CHART = "CANDLE_OR_CHART"
     private var idCandleOrChart = 0
 
@@ -67,6 +69,7 @@ class FragmentChart(private var ticker : String) : Fragment() {
         }
 
     private var idElement= 0
+    private var symbolElement = "D"
 
 
 
@@ -95,7 +98,7 @@ class FragmentChart(private var ticker : String) : Fragment() {
         lstDataRequestChartClass = ArrayList()
         viewModelWebSocket = MyViewModel(StickWebSocket())
         lstEntry = ArrayList()
-        sPref = requireContext().getSharedPreferences(CANDLE_OR_CHART, Context.MODE_PRIVATE)
+        sPref = requireContext().getSharedPreferences(CHART, Context.MODE_PRIVATE)
 
         idCandleOrChart = if(sPref.contains(CANDLE_OR_CHART)){
             if(sPref.getString(CANDLE_OR_CHART, "") == "0"){
@@ -138,10 +141,21 @@ class FragmentChart(private var ticker : String) : Fragment() {
             updateData()
         }
 
+        symbolElement = if(sPref.contains(SYMBOL_DAY + ticker)){
+            sPref.getString(SYMBOL_DAY + ticker, "")!!
+        }else{
+            val ed = sPref.edit()
+            ed.putString(SYMBOL_DAY + ticker, "D")
+            ed.apply()
+            "D"
+
+        }
+
         startSetting()
 
         settingGraph()
-        updateDataRequest("D")
+
+        updateDataRequest(symbolElement)
 
         viewModelWebSocket.getUsersValue().observe(viewLifecycleOwner, Observer {
             if(lstDataRequestChartClass.count() > 0) {
@@ -176,11 +190,17 @@ class FragmentChart(private var ticker : String) : Fragment() {
     }
 
     private fun startSetting(){
-        lstTextViews[0].background = requireContext().resources.getDrawable(R.color.black)
-        lstTextViews[0].setTextColor(Color.WHITE)
 
         for(i in (0 until lstTextViews.count())){
+            if(lstTextViews[i].text.toString() == symbolElement){
+                lstTextViews[i].background = requireContext().resources.getDrawable(R.color.black)
+                lstTextViews[i].setTextColor(Color.WHITE)
+                idElement = i
+            }
             lstTextViews[i].setOnClickListener {
+                val ed = sPref.edit()
+                ed.putString(SYMBOL_DAY + ticker, lstTextViews[i].text.toString())
+                ed.apply()
                 val animate = AnimateClass()
 
                 animate.colorAnimateBackground(lstTextViews[idElement], Color.BLACK, Color.WHITE)
@@ -270,11 +290,7 @@ class FragmentChart(private var ticker : String) : Fragment() {
         }
 
         lstDataRequestChartClass = StickChartInformation.convertListPeriod(period, lstDataRequestChartClass)
-        if(idCandleOrChart == 0) {
-            lstEntry = StickChartInformation.revertListEntry(lstDataRequestChartClass)
-        }else{
-            lstCandleEntry = StickChartInformation.revertListCandleEntry(lstDataRequestChartClass)
-        }
+
 
         minX = 0f
         maxX = lstDataRequestChartClass.count().toFloat()
@@ -321,11 +337,14 @@ class FragmentChart(private var ticker : String) : Fragment() {
                 minY = i.low
             }
         }
-        if(idCandleOrChart == 0){
+        if(idCandleOrChart == 0) {
+            lstEntry = StickChartInformation.revertListEntry(lstDataRequestChartClass)
             updateDataChart()
         }else{
+            lstCandleEntry = StickChartInformation.revertListCandleEntry(lstDataRequestChartClass)
             updateDataCandle()
         }
+
     }
 
     private fun updateDataChart(){
