@@ -22,7 +22,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:name = "com.example.yandextest.SearchFragment"
-                tools:layout="@layout/content_search"
+                tools:layout="@layout/fragment_search"
                 />
 
 

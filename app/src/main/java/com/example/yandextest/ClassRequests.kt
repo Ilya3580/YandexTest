@@ -29,7 +29,6 @@ class ClassRequests {
     private lateinit var sPref : SharedPreferences
 
     public fun parsQuestionSearch(text : String, context: Context) : HashMap<String, String>{
-        Log.d("TAGA", text)
         if(text.contains("[")) {
             val hashMap = HashMap<String, String>()
             val json = JSONObject(text)

@@ -49,7 +49,7 @@ class SearchFragment : Fragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
-        myView = inflater.inflate(R.layout.content_search, container, false)
+        myView = inflater.inflate(R.layout.fragment_search, container, false)
         retainInstance = true
         searchEditText = myView.findViewById(R.id.searchAppBar)
         iconButton = myView.findViewById(R.id.icon_search)
@@ -78,22 +78,22 @@ class SearchFragment : Fragment() {
         searchEditText.doAfterTextChanged {
             var text = searchEditText.text.toString()
             text = text.trim()
-            if(text != ""){
+            if(text.isEmpty() ){
+                clearButton.visibility = View.GONE
+                viewModelUnderSearch.user = true
+                viewModelUnderSearch.getUsersValue()
+            }else{
                 clearButton.visibility = View.VISIBLE
                 viewModelUnderSearch.user = false
                 viewModelUnderSearch.getUsersValue()
                 loadQuestionsSearch(searchEditText.text.toString())
-            }else{
-                clearButton.visibility = View.GONE
-                viewModelUnderSearch.user = true
-                viewModelUnderSearch.getUsersValue()
             }
         }
 
 
         searchEditText.setOnEditorActionListener { v, actionId, event ->
             if(actionId == EditorInfo.IME_ACTION_DONE){
-                loadQuestionsSearch(searchEditText.text.toString())
+                //loadQuestionsSearch(searchEditText.text.toString())
                 return@setOnEditorActionListener true
             }
             return@setOnEditorActionListener false
