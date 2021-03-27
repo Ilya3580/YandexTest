@@ -14,7 +14,9 @@ import java.util.*
 
 class MarkerCustom(context: Context?, layoutResource: Int, idPrice : Int, idData : Int,
                    private var maxX : Float, private var minX : Float,
-                   private var maxY : Float, private var minY : Float)
+                   private var maxY : Float, private var minY : Float,
+                   private var idType : Int, private var stickChartInformation: ArrayList<StickChartInformation>
+)
     : MarkerView(context, layoutResource) {
     private lateinit var e : Entry
 
@@ -28,8 +30,17 @@ class MarkerCustom(context: Context?, layoutResource: Int, idPrice : Int, idData
     }
 
     override fun refreshContent(e: Entry, highlight: Highlight) {
-        price.text = e.y.toString()
-        val answer = java.util.Date((e.x.toLong() * 1000))
+        val i = e.x.toInt()
+
+        if(id == 0) {
+            price.text = e.y.toString()
+        }else{
+            val text = "open : ${stickChartInformation[i].open}\nclose : ${stickChartInformation[i].close}" +
+                    "\nhigh : ${stickChartInformation[i].high}\nlow : ${stickChartInformation[i].low}"
+            price.text = text
+        }
+
+        val answer = java.util.Date((stickChartInformation[i].dateCode.toLong() * 1000))
         val mas = answer.toString().split(" ")
         date.text = "${mas[2]} ${mas[1]} ${mas[5]}"
         this.e = e
@@ -39,16 +50,16 @@ class MarkerCustom(context: Context?, layoutResource: Int, idPrice : Int, idData
     override fun getOffset(): MPPointF {
         var x = 0f
         var y = 0f
-        x = if(e.x < (maxX + minX)/2){
-            width.toFloat()
-        }else{
-            -width.toFloat()*2
+        x = if (e.x < (maxX + minX) / 2) {
+            width.toFloat()/1.4.toFloat()
+        } else {
+            -width.toFloat() * 1.6.toFloat()
         }
 
-        y = if(e.y < (maxY + minY)/2){
-            -height.toFloat()*2
-        }else{
-            height.toFloat()
+        y = if (e.y < (maxY + minY) / 2) {
+            -height.toFloat() * 1.6.toFloat()
+        } else {
+            height.toFloat()/1.4.toFloat()
         }
         return MPPointF(x, y)
 

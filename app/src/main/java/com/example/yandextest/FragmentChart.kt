@@ -39,13 +39,21 @@ class FragmentChart(private var ticker : String) : Fragment() {
     private lateinit var alert : AlertDialog
     private lateinit var client : OkHttpClient
     private lateinit var lstEntry : ArrayList<Entry>
+    private lateinit var lstDataRequestChartClass : ArrayList<StickChartInformation>
     private lateinit var lstCandleEntry: ArrayList<CandleEntry>
-    private lateinit var viewModelWebSocket : MyViewModel<Boolean>
+    private lateinit var viewModelWebSocket : MyViewModel<StickWebSocket>
     private var textView : TextView? = null
+    private lateinit var chartIndicator : TextView
+    var symbolPeriod = "D"
 
     private lateinit var sPref : SharedPreferences
     private val CANDLE_OR_CHART = "CANDLE_OR_CHART"
     private var idCandleOrChart = 0
+
+    var maxX = Float.MIN_VALUE
+    var minX = Float.MAX_VALUE
+    var maxY = Float.MIN_VALUE
+    var minY = Float.MAX_VALUE
 
     private var enterCurrency = ""
     private var _currencySymbol = ""
@@ -80,13 +88,14 @@ class FragmentChart(private var ticker : String) : Fragment() {
         }
         mLineChart = myView.findViewById(R.id.graphChart)
         mLineStick = myView.findViewById(R.id.graphStick)
+        chartIndicator = myView.findViewById(R.id.indicatorChart)
         textView = myView.findViewById(R.id.price)
 
-        sPref = requireContext().getSharedPreferences(CANDLE_OR_CHART, Context.MODE_PRIVATE)
 
-        val ed = sPref.edit()
-        ed.putString(CANDLE_OR_CHART, "0")
-        ed.apply()
+        lstDataRequestChartClass = ArrayList()
+        viewModelWebSocket = MyViewModel(StickWebSocket())
+        lstEntry = ArrayList()
+        sPref = requireContext().getSharedPreferences(CANDLE_OR_CHART, Context.MODE_PRIVATE)
 
         idCandleOrChart = if(sPref.contains(CANDLE_OR_CHART)){
             if(sPref.getString(CANDLE_OR_CHART, "") == "0"){
@@ -98,8 +107,6 @@ class FragmentChart(private var ticker : String) : Fragment() {
             0
         }
 
-        viewModelWebSocket = MyViewModel(false)
-        lstEntry = ArrayList()
 
         lstTextViews = ArrayList()
         lstTextViews.add(myView.findViewById(R.id.day))
@@ -109,15 +116,59 @@ class FragmentChart(private var ticker : String) : Fragment() {
         lstTextViews.add(myView.findViewById(R.id.year))
         lstTextViews.add(myView.findViewById(R.id.tenYear))
 
+        chartIndicator.setOnClickListener {
+            idCandleOrChart = if(idCandleOrChart == 0){
+                1
+            }else{
+                0
+            }
+
+            val ed = sPref.edit()
+            ed.putString(CANDLE_OR_CHART, idCandleOrChart.toString())
+            ed.apply()
+
+            if(idCandleOrChart == 0) {
+                mLineStick.visibility = View.GONE
+                mLineChart.visibility =  View.VISIBLE
+            }else{
+                mLineStick.visibility = View.VISIBLE
+                mLineChart.visibility =  View.GONE
+            }
+
+            updateData()
+        }
+
         startSetting()
 
         settingGraph()
-        updateData("D")
+        updateDataRequest("D")
 
         viewModelWebSocket.getUsersValue().observe(viewLifecycleOwner, Observer {
-            if(it) {
+            if(lstDataRequestChartClass.count() > 0) {
+                var periodInt = 0
+                when (symbolPeriod) {
+                    "D" -> periodInt = 86400
+                    "W" -> periodInt = 604800
+                    "M" -> periodInt = 2678400
+                    "6M" -> periodInt = 15897600
+                    "1Y" -> periodInt = 31536000
+                    "10Y" -> periodInt = 315619200
+                }
+                val item = lstDataRequestChartClass[lstDataRequestChartClass.count() - 1]
+                if(it.dateCode - item.dateCode < periodInt){
+                    item.close = it.price
+                    if(item.high < it.price){
+                        item.high = it.price
+                    }
+                    if(item.low > it.price){
+                        item.low = it.price
+                    }else if(item.low == 0f){
+                        item.low = it.price
+                    }
+                }else{
+                    lstDataRequestChartClass.add(StickChartInformation(it.dateCode, it.price, 0f,0f,0f))
+                }
                 updateData()
-                viewModelWebSocket.user = false
             }
         })
 
@@ -141,7 +192,7 @@ class FragmentChart(private var ticker : String) : Fragment() {
                 idElement = i
 
 
-                updateData(lstTextViews[i].text.toString())
+                updateDataRequest(lstTextViews[i].text.toString())
             }
         }
     }
@@ -168,13 +219,12 @@ class FragmentChart(private var ticker : String) : Fragment() {
         }
     }
 
-    private fun updateData(period : String){
+    private fun updateDataRequest(period : String){
         startProgressBar()
-        var symbolPeriod = period
         when(period){
             "D" -> symbolPeriod = "5m"
-            "W" -> symbolPeriod = "5m"
-            "M" -> symbolPeriod = "5m"
+            "W" -> symbolPeriod = "15m"
+            "M" -> symbolPeriod = "30m"
             "6M" -> symbolPeriod = "1d"
             "1Y" -> symbolPeriod = "1d"
             "10Y" -> symbolPeriod = "1mo"
@@ -208,15 +258,15 @@ class FragmentChart(private var ticker : String) : Fragment() {
     private fun parsHistoryData(text : String, period: String){
         val json = JSONObject(text)
         val jsonArray = json.getJSONObject("items")
-        var lstDataRequestChartClass = ArrayList<StickChartInformation>()
+        lstDataRequestChartClass = ArrayList()
         for(i in (0 until jsonArray.names().length())){
             val nameJson = jsonArray.getJSONObject(jsonArray.names()[i].toString())
-            val date = jsonArray.names()[i].toString().toInt()
+            val dateCode = jsonArray.names()[i].toString().toInt()
             val high = nameJson.get("high").toString().toFloat()
             val low = nameJson.get("low").toString().toFloat()
             val open = nameJson.get("open").toString().toFloat()
             val close = nameJson.get("close").toString().toFloat()
-            lstDataRequestChartClass.add(StickChartInformation(date, open, high, low, close))
+            lstDataRequestChartClass.add(StickChartInformation(dateCode, open, high, low, close))
         }
 
         lstDataRequestChartClass = StickChartInformation.convertListPeriod(period, lstDataRequestChartClass)
@@ -226,12 +276,51 @@ class FragmentChart(private var ticker : String) : Fragment() {
             lstCandleEntry = StickChartInformation.revertListCandleEntry(lstDataRequestChartClass)
         }
 
+        minX = 0f
+        maxX = lstDataRequestChartClass.count().toFloat()
+
+        for(i in lstDataRequestChartClass){
+            if(i.high > maxY){
+                maxY = i.high
+            }
+
+            if(i.high < minY){
+                minY = i.high
+            }
+
+            if(i.low > maxY){
+                maxY = i.low
+            }
+
+            if(i.low < minY){
+                minY = i.low
+            }
+        }
+
         updateData()
 
-        //startWebSocket()
+        startWebSocket()
     }
 
     private fun updateData(){
+        if(lstDataRequestChartClass.count() > 0) {
+            val i = lstDataRequestChartClass[lstDataRequestChartClass.count() - 1]
+            if (i.high > maxY) {
+                maxY = i.high
+            }
+
+            if (i.high < minY) {
+                minY = i.high
+            }
+
+            if (i.low > maxY) {
+                maxY = i.low
+            }
+
+            if (i.low < minY) {
+                minY = i.low
+            }
+        }
         if(idCandleOrChart == 0){
             updateDataChart()
         }else{
@@ -240,28 +329,7 @@ class FragmentChart(private var ticker : String) : Fragment() {
     }
 
     private fun updateDataChart(){
-        var maxX = Float.MIN_VALUE
-        var minX = Float.MAX_VALUE
-        var maxY = Float.MIN_VALUE
-        var minY = Float.MAX_VALUE
 
-        for(i in lstEntry){
-            if(i.x > maxX){
-                maxX = i.x
-            }
-
-            if(i.x < minX){
-                minX = i.x
-            }
-
-            if(i.y > maxY){
-                maxY = i.y
-            }
-
-            if(i.y < minY){
-                minY = i.y
-            }
-        }
 
         val setComp = LineDataSet(lstEntry,"")
         setComp.axisDependency = YAxis.AxisDependency.LEFT
@@ -276,14 +344,14 @@ class FragmentChart(private var ticker : String) : Fragment() {
 
         val handler = Handler(Looper.getMainLooper())
         handler.post {
-            if(lstEntry.count() - 1 >= 0)
-                textView!!.text = lstEntry[lstEntry.count() - 1].y.toString() + enterCurrency + _currencySymbol
+            if(lstDataRequestChartClass.count() - 1 >= 0)
+                textView!!.text = lstDataRequestChartClass[lstDataRequestChartClass.count() - 1].close.toString() + enterCurrency + _currencySymbol
 
             val data = LineData(dataSet)
             mLineChart.data = data
             mLineChart.setTouchEnabled(true)
             val mv = MarkerCustom(requireContext(), R.layout.custom_marker_view_layout,
-                R.id.markerPrice, R.id.markerDate, maxX, minX, maxY, minY)
+                R.id.markerPrice, R.id.markerDate, maxX, minX, maxY, minY, 0, lstDataRequestChartClass)
             mLineChart.marker = mv
             mLineChart.invalidate()
             stopProgressBar()
@@ -293,30 +361,24 @@ class FragmentChart(private var ticker : String) : Fragment() {
     private fun updateDataCandle(){
 
         val cds = CandleDataSet(lstCandleEntry, "Entries")
+        cds.shadowWidth = 0.3f
         cds.shadowColor = Color.DKGRAY
-        cds.shadowWidth = 0.7f
         cds.increasingPaintStyle = Paint.Style.FILL
         cds.decreasingPaintStyle = Paint.Style.FILL
-        cds.decreasingColor = Color.GREEN
-        cds.increasingColor = Color.RED
+        cds.decreasingColor = requireContext().resources.getColor(R.color.red)
+        cds.increasingColor = requireContext().resources.getColor(R.color.green)
+        cds.setDrawValues(false)
 
-        /*val setComp = LineDataSet(lstEntry,"")
-        setComp.axisDependency = YAxis.AxisDependency.LEFT
-        setComp.setDrawValues(false)
-        setComp.setDrawCircleHole(false)
-        setComp.setDrawCircles(false)
-
-        setComp.color = Color.BLACK
-
-        val dataSet = ArrayList<ILineDataSet>()
-        dataSet.add(setComp)
-*/
         val handler = Handler(Looper.getMainLooper())
         handler.post {
-            if(lstEntry.count() - 1 >= 0)
-                textView!!.text = lstEntry[lstEntry.count() - 1].y.toString() + enterCurrency + _currencySymbol
+            if(lstDataRequestChartClass.count() - 1 >= 0)
+                textView!!.text = lstDataRequestChartClass[lstDataRequestChartClass.count() - 1].close.toString() + enterCurrency + _currencySymbol
 
             val cd = CandleData(cds)
+            mLineStick.setTouchEnabled(true)
+            val mv = MarkerCustom(requireContext(), R.layout.custom_marker_view_layout,
+                R.id.markerPrice, R.id.markerDate, maxX, minX, maxY, minY, 1, lstDataRequestChartClass)
+            mLineStick.marker = mv
             mLineStick.data = cd
             mLineStick.invalidate()
             stopProgressBar()
@@ -345,16 +407,15 @@ class FragmentChart(private var ticker : String) : Fragment() {
 
     private fun startWebSocket(){
         val request = Request.Builder().url("wss://ws.finnhub.io?token=c15isdv48v6tvr5klgag").build()
-        val listener = Listener(lstEntry, viewModelWebSocket, requireContext(), ticker)
+        val listener = Listener(viewModelWebSocket, requireContext(), ticker, symbolPeriod)
         client = OkHttpClient()
         client.newWebSocket(request, listener)
         client.dispatcher().executorService().shutdown()
     }
 
 
-    class Listener(private var lst : ArrayList<Entry>,
-                   private var viewModel: MyViewModel<Boolean>, private var context: Context,
-                   private var ticker : String
+    class Listener(private var viewModel: MyViewModel<StickWebSocket>, private var context: Context,
+                   private var ticker : String, private var symbolPeriod : String
                    ) : WebSocketListener(){
         override fun onOpen(webSocket: WebSocket, response: Response) {
             //Log.d("TAGA", ticker)
@@ -388,14 +449,11 @@ class FragmentChart(private var ticker : String) : Fragment() {
             val data = json.getJSONArray("data")
             val jsonI = data[data.length() -1] as JSONObject
             val price = jsonI.get("p").toString().toFloat()
-            val time = jsonI.get("t").toString().toLong()/1000.toFloat()
-            //Log.d("TAGA", price.toString())
-            //Log.d("TAGA", time.toString())
+            val time = jsonI.get("t").toString().toLong()/1000
 
             val handler = Handler(Looper.getMainLooper())
             handler.post {
-                lst.add(Entry(time, price))
-                viewModel.user = true
+                viewModel.user = StickWebSocket(time.toInt(), price)
                 viewModel.getUsersValue()
             }
         }
