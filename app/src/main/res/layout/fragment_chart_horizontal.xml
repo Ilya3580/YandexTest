@@ -12,10 +12,21 @@
         android:layout_weight="1"
         android:layout_marginRight="10dp"
         android:layout_marginLeft="10dp"
-        android:id = "@+id/graph"
+        android:id = "@+id/graphChart"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
-    </com.github.mikephil.charting.charts.LineChart>
+        android:layout_height="match_parent"
+        android:visibility="visible"
+        />
+
+    <com.github.mikephil.charting.charts.CandleStickChart
+        android:layout_weight="1"
+        android:layout_marginRight="10dp"
+        android:layout_marginLeft="10dp"
+        android:id = "@+id/graphStick"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        />
 
     <LinearLayout
         android:layout_width="wrap_content"

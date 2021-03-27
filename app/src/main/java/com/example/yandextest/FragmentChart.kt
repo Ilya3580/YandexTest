@@ -2,8 +2,10 @@ package com.example.yandextest
 
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.res.Configuration
 import android.graphics.Color
+import android.graphics.Paint
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.os.Handler
@@ -17,11 +19,10 @@ import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
+import com.github.mikephil.charting.charts.CandleStickChart
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.YAxis
-import com.github.mikephil.charting.data.Entry
-import com.github.mikephil.charting.data.LineData
-import com.github.mikephil.charting.data.LineDataSet
+import com.github.mikephil.charting.data.*
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
 import okhttp3.*
 import org.json.JSONObject
@@ -34,11 +35,17 @@ class FragmentChart(private var ticker : String) : Fragment() {
     private lateinit var myView : View
     private lateinit var lstTextViews : ArrayList<TextView>
     private lateinit var mLineChart : LineChart
+    private lateinit var mLineStick : CandleStickChart
     private lateinit var alert : AlertDialog
     private lateinit var client : OkHttpClient
     private lateinit var lstEntry : ArrayList<Entry>
+    private lateinit var lstCandleEntry: ArrayList<CandleEntry>
     private lateinit var viewModelWebSocket : MyViewModel<Boolean>
     private var textView : TextView? = null
+
+    private lateinit var sPref : SharedPreferences
+    private val CANDLE_OR_CHART = "CANDLE_OR_CHART"
+    private var idCandleOrChart = 0
 
     private var enterCurrency = ""
     private var _currencySymbol = ""
@@ -71,8 +78,25 @@ class FragmentChart(private var ticker : String) : Fragment() {
             enterCurrency = "\n"
             inflater.inflate(R.layout.fragment_chart_horizontal, container, false)
         }
-        mLineChart = myView.findViewById(R.id.graph)
+        mLineChart = myView.findViewById(R.id.graphChart)
+        mLineStick = myView.findViewById(R.id.graphStick)
         textView = myView.findViewById(R.id.price)
+
+        sPref = requireContext().getSharedPreferences(CANDLE_OR_CHART, Context.MODE_PRIVATE)
+
+        val ed = sPref.edit()
+        ed.putString(CANDLE_OR_CHART, "0")
+        ed.apply()
+
+        idCandleOrChart = if(sPref.contains(CANDLE_OR_CHART)){
+            if(sPref.getString(CANDLE_OR_CHART, "") == "0"){
+                0
+            }else{
+                1
+            }
+        }else{
+            0
+        }
 
         viewModelWebSocket = MyViewModel(false)
         lstEntry = ArrayList()
@@ -92,7 +116,7 @@ class FragmentChart(private var ticker : String) : Fragment() {
 
         viewModelWebSocket.getUsersValue().observe(viewLifecycleOwner, Observer {
             if(it) {
-                updateDataChart()
+                updateData()
                 viewModelWebSocket.user = false
             }
         })
@@ -128,9 +152,21 @@ class FragmentChart(private var ticker : String) : Fragment() {
         mLineChart.xAxis.setDrawGridLines(false)
         mLineChart.axisRight.setDrawLabels(false)
         mLineChart.description.text = ""
+
+        mLineStick.legend.isEnabled = false
+        mLineStick.xAxis.setDrawLabels(false)
+        mLineStick.xAxis.setDrawGridLines(false)
+        mLineStick.axisRight.setDrawLabels(false)
+        mLineStick.description.text = ""
+
+        if(idCandleOrChart == 0) {
+            mLineStick.visibility = View.GONE
+            mLineChart.visibility =  View.VISIBLE
+        }else{
+            mLineStick.visibility = View.VISIBLE
+            mLineChart.visibility =  View.GONE
+        }
     }
-
-
 
     private fun updateData(period : String){
         startProgressBar()
@@ -184,11 +220,23 @@ class FragmentChart(private var ticker : String) : Fragment() {
         }
 
         lstDataRequestChartClass = StickChartInformation.convertListPeriod(period, lstDataRequestChartClass)
-        lstEntry = StickChartInformation.revertListEntry(lstDataRequestChartClass)
+        if(idCandleOrChart == 0) {
+            lstEntry = StickChartInformation.revertListEntry(lstDataRequestChartClass)
+        }else{
+            lstCandleEntry = StickChartInformation.revertListCandleEntry(lstDataRequestChartClass)
+        }
 
-        updateDataChart()
+        updateData()
 
-        startWebSocket()
+        //startWebSocket()
+    }
+
+    private fun updateData(){
+        if(idCandleOrChart == 0){
+            updateDataChart()
+        }else{
+            updateDataCandle()
+        }
     }
 
     private fun updateDataChart(){
@@ -238,6 +286,39 @@ class FragmentChart(private var ticker : String) : Fragment() {
                 R.id.markerPrice, R.id.markerDate, maxX, minX, maxY, minY)
             mLineChart.marker = mv
             mLineChart.invalidate()
+            stopProgressBar()
+        }
+    }
+
+    private fun updateDataCandle(){
+
+        val cds = CandleDataSet(lstCandleEntry, "Entries")
+        cds.shadowColor = Color.DKGRAY
+        cds.shadowWidth = 0.7f
+        cds.increasingPaintStyle = Paint.Style.FILL
+        cds.decreasingPaintStyle = Paint.Style.FILL
+        cds.decreasingColor = Color.GREEN
+        cds.increasingColor = Color.RED
+
+        /*val setComp = LineDataSet(lstEntry,"")
+        setComp.axisDependency = YAxis.AxisDependency.LEFT
+        setComp.setDrawValues(false)
+        setComp.setDrawCircleHole(false)
+        setComp.setDrawCircles(false)
+
+        setComp.color = Color.BLACK
+
+        val dataSet = ArrayList<ILineDataSet>()
+        dataSet.add(setComp)
+*/
+        val handler = Handler(Looper.getMainLooper())
+        handler.post {
+            if(lstEntry.count() - 1 >= 0)
+                textView!!.text = lstEntry[lstEntry.count() - 1].y.toString() + enterCurrency + _currencySymbol
+
+            val cd = CandleData(cds)
+            mLineStick.data = cd
+            mLineStick.invalidate()
             stopProgressBar()
         }
     }

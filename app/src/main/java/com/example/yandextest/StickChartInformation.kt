@@ -29,7 +29,8 @@ class StickChartInformation( private var _date : Int, private var _open : Float,
         set(value) {_close = value}
 
     companion object{
-        public fun revertListEntry(listDateRequestChartClass: ArrayList<StickChartInformation>) : ArrayList<Entry>{
+        public fun revertListEntry(listDateRequestChartClass: ArrayList<StickChartInformation>)
+            : ArrayList<Entry>{
             val lst = ArrayList<Entry>()
             for(i in listDateRequestChartClass){
                 lst.add(Entry(i.date.toFloat(), (i.open + i.close)/2))
@@ -37,7 +38,8 @@ class StickChartInformation( private var _date : Int, private var _open : Float,
             return lst
         }
 
-        public fun revertListCandleEntry(listDateRequestChartClass: ArrayList<StickChartInformation>) : ArrayList<CandleEntry>{
+        public fun revertListCandleEntry(listDateRequestChartClass: ArrayList<StickChartInformation>)
+            : ArrayList<CandleEntry>{
             val lst = ArrayList<CandleEntry>()
             for(i in listDateRequestChartClass){
                 lst.add(CandleEntry(i.date.toFloat(), i.high, i.low, i.open, i.close))
@@ -45,11 +47,8 @@ class StickChartInformation( private var _date : Int, private var _open : Float,
             return lst
         }
 
-        public fun convertListPeriod(
-            period: String,
-            listDateRequestChartClass: ArrayList<StickChartInformation>
-        )
-                : ArrayList<StickChartInformation> {
+        public fun convertListPeriod(period: String, listDateRequestChartClass: ArrayList<StickChartInformation>)
+            : ArrayList<StickChartInformation> {
 
             when (period) {
                 "D" -> return convertDate(listDateRequestChartClass, 86400)
