@@ -30,16 +30,24 @@ import androidx.lifecycle.ViewModel
 import okhttp3.*
 import java.io.IOException
 
-
+//этот клас отвечает за поиск, а также что показывается под ним
 class SearchFragment : Fragment() {
 
     private lateinit var myView : View
-    private lateinit var mainActivity : MainActivity
+    private var mainActivity : MainActivity? = null
+    //edittext поиска
     private lateinit var searchEditText: EditText
+    //иконка поиска
     private lateinit var iconButton : Button
+    //этот крестик который появляется чтобы убрать текст
     private lateinit var clearButton : Button
+
+    //далее идут viewModel
+    //этот viewmodel твечает за то что будет под поиском контнейнер с фрагментами или списки stock и favorite
     private lateinit var viewModelSearch: MyViewModel<Boolean>
+    //этот viewmodel отвечает за то какой будет фрагмент по поиском
     private lateinit var viewModelUnderSearch: MyViewModel<Boolean>
+    //этот viewmodel отвечаает за результаты поиска
     private lateinit var viewModelListUnderSearch : MyViewModel<HashMap<String, String>>
 
     companion object {
@@ -55,6 +63,7 @@ class SearchFragment : Fragment() {
         iconButton = myView.findViewById(R.id.icon_search)
         clearButton = myView.findViewById(R.id.icon_clear)
 
+        //устанавливаю иконки
         iconButton.background = requireContext().resources.getDrawable(R.drawable.ic_baseline_search_24)
         clearButton.background = requireContext().resources.getDrawable(R.drawable.ic_baseline_clear_24)
 
@@ -63,18 +72,20 @@ class SearchFragment : Fragment() {
         }catch (e : Exception){
             Log.d("ERROR", e.toString())
         }
+        //здесь я инициализирую viewmodel и передаю в mainactivity
         viewModelSearch = MyViewModel<Boolean>(true)
         viewModelUnderSearch = MyViewModel<Boolean>(true)
         viewModelListUnderSearch = MyViewModel<HashMap<String, String>>(HashMap())
         if(mainActivity != null) {
-            mainActivity.viewModelSearch = viewModelSearch
-            mainActivity.underViewModel = viewModelUnderSearch
-            mainActivity.viewModelListUnderSearch = viewModelListUnderSearch
+            mainActivity!!.viewModelSearch = viewModelSearch
+            mainActivity!!.underViewModel = viewModelUnderSearch
+            mainActivity!!.viewModelListUnderSearch = viewModelListUnderSearch
 
         }
 
         searchEditText.maxLines = 1
 
+        //здесь я отслеживаю изменение текста и в зависимости от этого вызываю нужные viewmodel и показываю нужные тконки
         searchEditText.doAfterTextChanged {
             var text = searchEditText.text.toString()
             text = text.trim()
@@ -86,23 +97,26 @@ class SearchFragment : Fragment() {
                 clearButton.visibility = View.VISIBLE
                 viewModelUnderSearch.user = false
                 viewModelUnderSearch.getUsersValue()
+                //функция которая выполняет поиск
                 loadQuestionsSearch(searchEditText.text.toString())
             }
         }
 
-
+        //здесь я отслеиваю нажатие на кнопку ok
         searchEditText.setOnEditorActionListener { v, actionId, event ->
             if(actionId == EditorInfo.IME_ACTION_DONE){
-                //loadQuestionsSearch(searchEditText.text.toString())
+                loadQuestionsSearch(searchEditText.text.toString())
                 return@setOnEditorActionListener true
             }
             return@setOnEditorActionListener false
         }
 
+        //здесь я отслеживаю изменение viewmodel и в зависимости от этого показываю нужную иконку
         viewModelSearch.getUsersValue().observe(viewLifecycleOwner, Observer {
             if (it) {
                 iconButton.background =
                     requireContext().resources.getDrawable(R.drawable.ic_baseline_search_24)
+                //убираю клавиатуру
                 val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
                 imm.hideSoftInputFromWindow(myView.windowToken, 0)
             } else {
@@ -112,6 +126,7 @@ class SearchFragment : Fragment() {
         })
 
 
+        //вызываю viewmodel ghb rkbrt yf увшееуче
         searchEditText.setOnClickListener {
             viewModelSearch.user = false
         }
@@ -126,6 +141,7 @@ class SearchFragment : Fragment() {
             }
         }
 
+        //эта бработка иконки отчистки текста
         clearButton.setOnClickListener {
             searchEditText.setText("")
         }
@@ -133,7 +149,9 @@ class SearchFragment : Fragment() {
     }
 
 
+    //в этой функции я выполняю поиск с помощью встроенного метода api
     private fun loadQuestionsSearch(text : String){
+        //изменяю сссылку
         var url = EnumListName.SEARCH.value
         url = url.replace(EnumListName.MY_SYMBOL.value, text)
         val r = Request.Builder().url(url).build()
@@ -145,6 +163,9 @@ class SearchFragment : Fragment() {
                 val body = response.body()?.string()
                 if(body != null)
                 {
+                    //я испоользовал 3 api и у api которое под поиск есть ограничение здесь я проверяю сработало ли ограничение
+                    //если да то вывожу toast
+                    //если нет то отправляю результат с помощью viewmodel в fragment ос списками
                     val handler = Handler(Looper.getMainLooper())
                     if(body.contains("Note")){
                         handler.post {
@@ -163,7 +184,14 @@ class SearchFragment : Fragment() {
             }
 
             override fun onFailure(call: Call, e: IOException) {
+                //отлавливаю момент когда пропадает интернет
+                if(!InternetFunctions.hasConnection(requireContext())){
+                    val handler = Handler(Looper.getMainLooper())
+                    handler.post {
+                        InternetFunctions.alertDialog(requireContext())
+                    }
 
+                }
             }
         })
     }

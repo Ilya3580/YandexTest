@@ -5,6 +5,7 @@ import android.content.Context
 import android.net.ConnectivityManager
 import androidx.core.content.contentValuesOf
 
+//этот класс с двумя функциями. 1 - проверяет есть ли интернет. 2 - показывает дилоговое окно с сообщением что нет интернета
 class InternetFunctions {
 
     companion object{

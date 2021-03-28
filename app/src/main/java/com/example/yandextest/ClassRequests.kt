@@ -22,13 +22,16 @@ import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 
+//этот клас хранит вспомогательные функции
 class ClassRequests {
 
     private val REQUESTS = "REQUESTS"
     private val TICKERS = "TICKERS"
     private lateinit var sPref : SharedPreferences
 
+    //эта функция разбирает json для поиска
     public fun parsQuestionSearch(text : String, context: Context) : HashMap<String, String>{
+        //этой функцией я проверяю не выдало ли api ограничение
         if(text.contains("[")) {
             val hashMap = HashMap<String, String>()
             val json = JSONObject(text)
@@ -47,7 +50,7 @@ class ClassRequests {
             return convertList(HashMap())
         }
     }
-
+    //этой функция проверяет есть ли какято информация в памяти устройства если да то возвращаетт её
     public fun checkTicker(ticker : String, context: Context) : CellInformation?{
         sPref = context.getSharedPreferences(REQUESTS, Context.MODE_PRIVATE)
         return if(sPref.contains(ticker)) {
@@ -62,14 +65,14 @@ class ClassRequests {
             null
         }
     }
-
+    //этой функцией сохраняет тикер в память устройства
     public fun saveTicker(cellInformation: CellInformation, context: Context){
         sPref = context.getSharedPreferences(REQUESTS, Context.MODE_PRIVATE)
         val ed = sPref.edit()
         ed.putString(cellInformation.ticker, cellInformation.toString())
         ed.apply()
     }
-
+    //эта функция разбирает json и сохраняет информацию о компании
     public fun parsTickersData(text: String, lst : ArrayList<CellInformation>, context: Context){
         val json = JSONArray(text)
         for(i in (0 until json.length())) {
@@ -91,7 +94,7 @@ class ClassRequests {
             }
         }
     }
-
+    //эта функция разбирает json и возвращает список зар=груженных тикеров
     public fun parsCheckURL(text : String, context: Context) : ArrayList<String>{
         sPref = context.getSharedPreferences(REQUESTS, Context.MODE_PRIVATE)
         val lst = ArrayList<String>()
@@ -101,7 +104,7 @@ class ClassRequests {
         }
         return convertList(lst)
     }
-
+    //эта функция сохраняет список тикеров
     public fun saveList(context: Context, lst : ArrayList<String>){
         sPref = context.getSharedPreferences(REQUESTS, Context.MODE_PRIVATE)
         var lstStr = ""
@@ -117,7 +120,7 @@ class ClassRequests {
         ed.putString(TICKERS, lstStr)
         ed.apply()
     }
-
+    //эта функция возвращает список объектов котоорые хранят всю информацию о компании
     public fun readListCellInformation(context: Context) : ArrayList<CellInformation>{
         sPref = context.getSharedPreferences(REQUESTS, Context.MODE_PRIVATE)
         if(sPref.contains(TICKERS)){
@@ -133,7 +136,7 @@ class ClassRequests {
             return ArrayList()
         }
     }
-
+    //эта функция возвращает список сохраненый тикеров в памяти устройства
     public fun readList(context: Context) : ArrayList<String>{
         sPref = context.getSharedPreferences(REQUESTS, Context.MODE_PRIVATE)
         if(sPref.contains(TICKERS)){
@@ -143,6 +146,7 @@ class ClassRequests {
         }
     }
 
+    //эти две функции удаляют из списка индексы и валютные пары потому что не все api которые я использую потдерживают эти данные
     public fun convertList(lstPreview : ArrayList<String>) : ArrayList<String>{
         val lstSymbol = ArrayList<String>()
         lstSymbol.add(".")
@@ -166,7 +170,6 @@ class ClassRequests {
 
         return lstFinal
     }
-
     private fun convertList(lstPreview : HashMap<String, String>) : HashMap<String,String>{
         val lstSymbol = ArrayList<String>()
         lstSymbol.add(".")

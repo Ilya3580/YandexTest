@@ -5,6 +5,8 @@ import android.animation.ValueAnimator
 import android.graphics.Color
 import android.widget.TextView
 
+//этот класс с анимациями здесь все функции похожи
+//есть начальное значение и конечное и с определенным шагом оно изменяет объект
 class AnimateClass {
 
     public fun colorAnimateText(textView: TextView, colorStart : Int, colorEnd : Int){

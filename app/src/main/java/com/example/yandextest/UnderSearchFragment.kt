@@ -12,19 +12,28 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
 
-
+//этот фрагмент овечает за два вертикальных спика которе появляются под поиском
 class UnderSearchFragment() : Fragment() {
 
     private lateinit var myView : View
+
+    //это два вертикальных списка
     private lateinit var recyclerViewPopular : RecyclerView
     private lateinit var recyclerViewHistory: RecyclerView
+
+    //это экземпляр класса в котором находятся вспомогательные функции
     private lateinit var classRequests: ClassRequests
+
+    //это textviews которые находятся над двумя списками
     private lateinit var textViewPopular : TextView
     private lateinit var textViewHistory : TextView
-    private lateinit var sPref : SharedPreferences
+
+    //список и адаптер который отображается в истории
     private lateinit var lstHistory : ArrayList<String>
     private lateinit var adapterHistory : RecyclerViewHorizontal
 
+    //это для кеширования информации
+    private lateinit var sPref : SharedPreferences
     private val POPULAR_LIST = "POPULAR_LIST"
     private val TICKERS = "TICKERS"
 
@@ -37,6 +46,7 @@ class UnderSearchFragment() : Fragment() {
                               savedInstanceState: Bundle?): View? {
         myView = inflater.inflate(R.layout.fragment_under_search, container, false)
         retainInstance = true
+        //инициализируем списки и другие объекты
         classRequests = ClassRequests()
         lstHistory = ArrayList()
         textViewPopular = myView.findViewById(R.id.popularTextView)
@@ -45,22 +55,28 @@ class UnderSearchFragment() : Fragment() {
         recyclerViewPopular = myView.findViewById(R.id.recyclerViewPopular)
         sPref = requireContext().getSharedPreferences(POPULAR_LIST, Context.MODE_PRIVATE)
 
+
         settingHistoryList()
         updatePopularList()
 
         return myView
     }
 
+    //здесь мы настраиваем список истории
     private fun settingHistoryList(){
+        //здесь мы используем StaggeredGridLayoutManager чтобы он был горизонтальным с двумя строчками
         recyclerViewHistory.layoutManager = StaggeredGridLayoutManager(2, LinearLayoutManager.HORIZONTAL)
         if(sPref.contains(TICKERS)){
+            //загружаем список истории
             lstHistory = ArrayList(sPref.getString(TICKERS, "")!!.split("$"))
         }
+        //если спиок пустой то убираем textview
         if(lstHistory.count() == 0){
             textViewHistory.visibility = View.GONE
-        }else{
+        }else{//если спиок не пустой то добавляем список в адаптер и включаем textview над списком
             textViewHistory.visibility = View.VISIBLE
             adapterHistory = RecyclerViewHorizontal(lstHistory)
+            //это свойство с помощиб которого можно удалять элементы долгим нажатием оно будет включенно только в списке истории
             adapterHistory.flagOnLongClick = true
             recyclerViewHistory.adapter = adapterHistory
         }
@@ -68,6 +84,7 @@ class UnderSearchFragment() : Fragment() {
 
     }
 
+    //в этой функции мы кешируем список истории запросов
     private fun saveList(){
         var str = ""
         for(i in (0 until lstHistory.count())){
@@ -82,6 +99,7 @@ class UnderSearchFragment() : Fragment() {
         ed.apply()
     }
 
+    //эта функция добавляет или добавляет элемент в списоке истории
     public fun userUpdateQuestions(question : String){
         if(question != ""){
             val i = lstHistory.indexOf(question)
@@ -97,6 +115,8 @@ class UnderSearchFragment() : Fragment() {
     }
 
     public fun updatePopularList(){
+        //эта функция вызывается во viewmodel она обнавляет весь список сразу а не по одному элементу потому что если список попоулярных запросов обновляется то обновляется весь
+        //а не по одному элементу как со списком истории
         val lstPreview = classRequests.readList(requireContext())
         recyclerViewPopular.layoutManager = StaggeredGridLayoutManager( 2, LinearLayoutManager.HORIZONTAL)
         if(lstPreview.count() == 0){

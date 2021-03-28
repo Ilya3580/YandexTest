@@ -1,5 +1,5 @@
 package com.example.yandextest
-
+// здесь я храню спико запрсов, имен, и т.д.
 enum class EnumListName(val value: String) {
     MY_SYMBOL("<MY_SYMBOL>"),
     MY_SYMBOL2("<MY_SYMBOL2>"),

@@ -3,6 +3,8 @@ package com.example.yandextest
 import java.util.*
 
 class CellInformation {
+    //этот класс отвечает за информацию о компании
+    //также я здесь переопределяю функции toString чтобы удобно кешировать информацию
     private var _ticker : String = ""
     private var _company : String = ""
     private var _price : String = ""

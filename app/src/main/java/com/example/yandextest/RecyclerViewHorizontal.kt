@@ -9,23 +9,26 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
+//этот reyclerview отвечает за вертикальные списки под поиском
 open class RecyclerViewHorizontal (private var values: ArrayList<String>) :
     RecyclerView.Adapter<RecyclerViewHorizontal.MyViewHolder>() {
 
-    private lateinit var view: View
+    private lateinit var view: View//view элемента списка
     private lateinit var context : Context
+    //эта переменая устанвливает можно лли удалять элементы он абудет true для списка с историей
     private var _flagOnLongClick = false
     public var flagOnLongClick : Boolean
         get() {return _flagOnLongClick}
         set(value) {_flagOnLongClick = value}
 
+    //это функция вызывается когда нужно обновить или изменить список
     public fun setValues(values: ArrayList<String>){
         this.values = values
         notifyDataSetChanged()
     }
 
+    //для хранения информации списков
     private lateinit var sPref : SharedPreferences
-
     private val POPULAR_LIST = "POPULAR_LIST"
     private val TICKERS = "TICKERS"
 
@@ -42,6 +45,8 @@ open class RecyclerViewHorizontal (private var values: ArrayList<String>) :
 
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
         holder.textViewCell.text = values[position]
+
+        //здесь я обрабатываю нажатие на view проверяю естьь ли интернет если да то запускаю другую активность и передаю туда тикер
         holder.itemView.setOnClickListener {
             if(InternetFunctions.hasConnection(context)){
                 val intent = Intent(context, ChartActivity::class.java)
@@ -51,9 +56,11 @@ open class RecyclerViewHorizontal (private var values: ArrayList<String>) :
                 InternetFunctions.alertDialog(context)
             }
         }
+        //далле я обрабатываю долгое нажатие оно будет работать только для списка с истоией
         if(_flagOnLongClick) {
             holder.itemView.setOnLongClickListener {
                 if(sPref.contains(TICKERS)){
+                    //далле я удаляю его из сохраненого списка
                     val ticker = values[position]
                     val lstHistory = ArrayList(sPref.getString(TICKERS, "")!!.split("$"))
                     lstHistory.remove(ticker)
@@ -68,6 +75,8 @@ open class RecyclerViewHorizontal (private var values: ArrayList<String>) :
                     val ed = sPref.edit()
                     ed.putString(TICKERS, saveStr)
                     ed.apply()
+
+                    //здесь я удаляю его view
                     values.removeAt(position)
                     notifyItemRemoved(position)
                 }

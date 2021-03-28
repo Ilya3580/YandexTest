@@ -11,7 +11,7 @@ import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import java.util.*
 import kotlin.collections.ArrayList
 
-
+//этот класс наследуется от AdapterRecyclerViewStocks поэтому конструктор аналогичный
 class AdapterRecyclerViewFavorite(private val values: ArrayList<CellInformation>,
                                   private val viewModelListFavorite : MyViewModel<ArrayList<String>>,
                                   private var owner: LifecycleOwner,
@@ -19,8 +19,9 @@ class AdapterRecyclerViewFavorite(private val values: ArrayList<CellInformation>
 ) : AdapterRecyclerViewStocks(values, viewModelListFavorite, owner, context), ItemTouchHelperAdapter{
 
 
-
+    //переопределяю клик на звездочку и удаляю из списка
     override fun onClick(functionsTickers: FunctionsTickers, position: Int, holder: MyViewHolder) {
+        //я переопределяю индекс заново потому что элементы могли переставить
         for(i in (0 until values.count())) {
             if(values[i].ticker == holder.textViewTicker.text.toString()) {
                 onItemDismiss(i)
@@ -29,6 +30,7 @@ class AdapterRecyclerViewFavorite(private val values: ArrayList<CellInformation>
         }
 
     }
+    //удаляет элемент из списка избрынных как в памяти устройства, так и с экрана
     override fun onItemDismiss(position: Int) {
         values.removeAt(position)
         notifyItemRemoved(position)
@@ -39,6 +41,7 @@ class AdapterRecyclerViewFavorite(private val values: ArrayList<CellInformation>
     }
 
 
+    //эта функция отвечает за перетаскивание элементов
     override fun onItemMove(fromPosition: Int, toPosition: Int) {
         if (fromPosition < toPosition) {
             for (i in fromPosition until toPosition) {
@@ -53,12 +56,13 @@ class AdapterRecyclerViewFavorite(private val values: ArrayList<CellInformation>
         functionsTickers.replacePosition(fromPosition, toPosition, context)
         notifyItemMoved(fromPosition, toPosition)
 
-
     }
 
-
+    //переопределяю слушатель viewmodel
     override fun checkStars(holder: MyViewHolder, position: Int) {
         viewModelListFavorite.getUsersValue().observe(owner, androidx.lifecycle.Observer {
+            //здесь я удаляю элемент если его нет в списке избранных
+            //если есть то ставлю звездочку активной
             val functionsTickers = FunctionsTickers()
             val lst = functionsTickers.listFavoriteTickers(context)
             if(position < values.size && lst.count() <= values.count()) {
@@ -76,6 +80,7 @@ class AdapterRecyclerViewFavorite(private val values: ArrayList<CellInformation>
         })
     }
 
+    //эта функция срабатывает при добавлении нового элемента в списко избранных
     public fun checkNewFavoriteTickers(){
         viewModelListFavorite.getUsersValue().observe(owner, androidx.lifecycle.Observer {
 
@@ -96,6 +101,7 @@ class AdapterRecyclerViewFavorite(private val values: ArrayList<CellInformation>
 
 }
 
+//этот класс отвечает за смахивание элементов в сторону и перетаскивание
 class SimpleItemTouchHelperCallback(adapter: ItemTouchHelperAdapter) : ItemTouchHelper.Callback() {
     private val mAdapter: ItemTouchHelperAdapter = adapter
     override fun isLongPressDragEnabled(): Boolean {

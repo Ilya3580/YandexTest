@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 
+//это viewmodel которые есть во всех активностях мне нужно было хранить разные переменные в нем поэтому я использую generic
 open class MyViewModel<T>(value: T) : ViewModel() {
     private val _usersValue = MutableLiveData<T>()
     public var user : T?

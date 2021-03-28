@@ -14,17 +14,21 @@ import androidx.recyclerview.widget.RecyclerView
 import okhttp3.*
 import java.io.IOException
 
-
+//этот фрагмент отвечает за списки stock и favorite
+//в кончтрукторе мы получаем viewmodel и тип
+//viewmodel срабатывает при изменнеие спика favorite
+//тип отвечает какой должен быть fragment
 class FragmentRecyclerViewSection(
     private var valueStocksOrFavorite: String,
     private var viewModelListFavorite: MyViewModel<ArrayList<String>>) : Fragment() {
 
-    private lateinit var recyclerView : RecyclerView
+    private lateinit var recyclerView : RecyclerView//recyclerview с нашими объектами
     private lateinit var myView : View
-    private lateinit var lst : ArrayList<CellInformation>
-    private lateinit var mainActivity : MainActivity
-    private lateinit var lstTickers : ArrayList<String>
-    private var flagShowNotInternet = false
+    private lateinit var lst : ArrayList<CellInformation>//список в котором хранится вся инфа о компаниях
+    private var mainActivity : MainActivity? = null
+    private lateinit var lstTickers : ArrayList<String>//список тикеров
+    private var flagShowNotInternet = false//это нужно чтобы показывать сообщение один раз что нет интернета
+    //потому что может произойти так что интренет пропадет когда будут два потоко обрабатывать информацию и оба дадут понять что нет интрнета
 
     companion object {
         fun newInstance(valueStocksOrFavorite : String, viewModelListFavorite : MyViewModel<ArrayList<String>>)
@@ -35,10 +39,12 @@ class FragmentRecyclerViewSection(
                               savedInstanceState: Bundle?): View? {
         myView = inflater.inflate(R.layout.fragment_recycler_view, container, false)
 
+        //инициализирую recycler view и устанавливаю отступы и Layout Manager
         recyclerView = myView.findViewById(R.id.recyclerView)
         recyclerView.addItemDecoration(SpacesItemDecoration(50))
         recyclerView.layoutManager = LinearLayoutManager(context)
-
+        //создаю экземпляр списка
+        lst = ArrayList()
         retainInstance = true
 
         try{
@@ -46,16 +52,19 @@ class FragmentRecyclerViewSection(
         }catch (e : Exception){
         }
 
-        lst = ArrayList()
 
+        //здесь я определяю какой тип списка должен быть у нас
         if(valueStocksOrFavorite == EnumListName.STOCKS.value){
             settingStocks()
         }else{
             settingFavorite()
+            //список favorite я создаю сразу потому что список избранных тикеров сохранен в памяти устройства
             val custom = AdapterRecyclerViewFavorite(lst, viewModelListFavorite, viewLifecycleOwner,requireContext())
 
+            //эту функцию я вызываю чтобы в recycler view favorite был создан слушатель изменения списка favorite
             custom.checkNewFavoriteTickers()
 
+            //этот класс я использую для того чтобы можно было перетаскивать элементы и удалять смахиванием
             val callback: ItemTouchHelper.Callback = SimpleItemTouchHelperCallback(custom)
             val touchHelper = ItemTouchHelper(callback)
             touchHelper.attachToRecyclerView(recyclerView)
@@ -66,6 +75,7 @@ class FragmentRecyclerViewSection(
     }
 
     private fun loadTickers(){
+        //здесь я изменяю ссылку и пдружаю тикеры
         val classRequests = ClassRequests()
         val url = EnumListName.STOCKS_TICKERS.value
         val r = Request.Builder().url(url).build()
@@ -75,8 +85,11 @@ class FragmentRecyclerViewSection(
         client.newCall(r).enqueue(object : Callback {
             override fun onResponse(call: Call, response: Response) {
                 val body = response.body()?.string()
+                //в этой строчке я конвертирую json в список тикеров
                 lstTickers = classRequests.parsCheckURL(body.toString(), requireContext())
+                //эта функция удаляет из спика индексы и валютные пары я это делаю потому что не во всех api которые я использую потдерживается этот тип тикеров
                 lstTickers = classRequests.convertList(lstTickers)
+                //далее я сохраняю ту информацию которая у нас есть в список, а позже я её обновляю
                 for(i in lstTickers){
                     val ci = classRequests.checkTicker(i, requireContext())
                     if(ci != null){
@@ -96,7 +109,9 @@ class FragmentRecyclerViewSection(
         })
     }
 
+    //в api mboum можно отправить на получание инфы 50 тикеров здесь я набираю 50 тикеров и отправляю
     private fun convertUrlParsCellInformation(){
+        //я добавляю все тикеры в tickersLoad через запятую а потом отправляю запрос
         val classRequests = ClassRequests()
         val countTickersOneRequest = 50
         var tickersLoad = ""
@@ -156,19 +171,23 @@ class FragmentRecyclerViewSection(
                 val body = response.body()?.string()
                 if(body != null)
                 {
+                    //здесь я обрабатываю список тикеров которые мы получаем
                     val classRequests = ClassRequests()
+                    //в этой функции я их и обрабатываю и сохраняю в память приложения
                     classRequests.parsTickersData(body, lst, requireContext())
                     if(number == lastNumber) {
+                        //эта кусок кода сработает по завершению последнего запроса
+                        //здесь я их получаю из памяти и сохраняю в список
                         classRequests.saveList(requireContext(), lstTickers)
                         val handler = Handler(Looper.getMainLooper())
                         handler.post {
                             val custom = AdapterRecyclerViewStocks(lst, viewModelListFavorite, viewLifecycleOwner, requireContext())
                             recyclerView.adapter = custom
                             if(mainActivity != null) {
-                                val vm = mainActivity.viewModelListPopular
+                                val vm = mainActivity!!.viewModelListPopular
                                 vm.user = true
                                 vm.getUsersValue()
-                                mainActivity.stopProgressBar()
+                                mainActivity!!.stopProgressBar()
                             }
                         }
                     }
@@ -187,12 +206,13 @@ class FragmentRecyclerViewSection(
     }
 
     private fun settingStocks(){
+        //отчищаю список тикеров а потом отправляю его на обновление
         lst.clear()
         loadTickers()
-
     }
 
     private fun settingFavorite(){
+        //здесь я настраиваю favorite получаю из памяти тикер и инфу о нем и добавляю в список
         val functionsTickers = FunctionsTickers()
         val lstPreview = functionsTickers.listFavoriteTickers(requireContext())
         lst.clear()
@@ -208,14 +228,17 @@ class FragmentRecyclerViewSection(
 
     }
 
+    //эта функция вызывается если нет интернета
     private fun notInternet(){
         if(!flagShowNotInternet) {
             val handler = Handler(Looper.getMainLooper())
             handler.post {
                 showSaveData()
                 if (mainActivity != null)
-                    mainActivity.stopProgressBar()
+                    mainActivity!!.stopProgressBar()
                 val alert = InternetFunctions.alertDialog(requireContext())
+                //запускаю поток который проверяет чтопоявился интрнет или нет
+                //если появился то обновляю данные по новой
                 Thread(Runnable {
                     while (true) {
                         if (InternetFunctions.hasConnection(requireContext())) {
@@ -224,7 +247,7 @@ class FragmentRecyclerViewSection(
                                 alert.create().dismiss()
                                 settingStocks()
                                 if (mainActivity != null)
-                                    mainActivity.startProgressBar()
+                                    mainActivity!!.startProgressBar()
                             }
                             break
                         }
@@ -235,6 +258,7 @@ class FragmentRecyclerViewSection(
         }
     }
 
+    //если нет итернета то чтобы списки не были пустыми я показываю то что было сохраненно в последний раз
     private fun showSaveData(){
         if(valueStocksOrFavorite == EnumListName.STOCKS.value){
             var listCache = ArrayList<CellInformation>()

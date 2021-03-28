@@ -5,6 +5,7 @@ import com.github.mikephil.charting.data.CandleEntry
 import com.github.mikephil.charting.data.Entry
 import java.security.KeyStore
 
+//в этом классехранится вся информация о компании в chartfragment мы создаем из этого типа списко
 class StickChartInformation {
     private var _dateCode : Int = 0
     private var _open : Float = 0f
@@ -43,6 +44,7 @@ class StickChartInformation {
         set(value) {_close = value}
 
     companion object{
+        //эта функция используется для того чтобы преобразовать списко для линейного графика
         public fun revertListEntry(listDateRequestChartClass: ArrayList<StickChartInformation>)
             : ArrayList<Entry>{
             val lst = ArrayList<Entry>()
@@ -51,7 +53,7 @@ class StickChartInformation {
             }
             return lst
         }
-
+        //эта функция используется для того чтобы преобразовать списко для свечного графика
         public fun revertListCandleEntry(listDateRequestChartClass: ArrayList<StickChartInformation>)
             : ArrayList<CandleEntry>{
             val lst = ArrayList<CandleEntry>()
@@ -62,20 +64,24 @@ class StickChartInformation {
             }
             return lst
         }
-
+        //эти две функции используются для того чтобы оставить нужные точки
+        //как я уже ранее объяснял api не предоставляло информацию для недели и дня и приходилось брать эту инфу из месяца
         public fun convertListPeriod(period: String, listDateRequestChartClass: ArrayList<StickChartInformation>)
             : ArrayList<StickChartInformation> {
 
+            //эта разница которая должна быть между первой и последней точкой
+            //она берется из преобразования в периода в секунду
             when (period) {
-                "D" -> return convertDate(listDateRequestChartClass, 86400)
+                "D" -> return convertDate(listDateRequestChartClass, 86400)//это день 1 день - 86400 секунд и так для всего остального
                 "W" -> return convertDate(listDateRequestChartClass, 604800)
                 "6M" -> return convertDate(listDateRequestChartClass, 15897600)
                 "1Y" -> return convertDate(listDateRequestChartClass, 31536000)
             }
+            //если не один из этих параметров не был выбран значит мы передали либо меся либо 10 лет так как они есть в api то их преобразовывать не нужно
             return listDateRequestChartClass
         }
 
-
+        //в этой функции я обрезаю переод до нужного
         private fun convertDate(listDateRequestChartClass: ArrayList<StickChartInformation>, unixDifference : Int)
                 : ArrayList<StickChartInformation>  {
             val lst = ArrayList<StickChartInformation>()
@@ -91,6 +97,7 @@ class StickChartInformation {
     }
 }
 
+//этот класс хранит информацию которую возвращает websocket
 class StickWebSocket{
     private var _dateCode : Int = 0
     private var _price : Float = 0f

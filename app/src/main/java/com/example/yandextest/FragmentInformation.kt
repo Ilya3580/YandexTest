@@ -17,11 +17,12 @@ import okhttp3.*
 import org.json.JSONObject
 import java.io.IOException
 
+//этот фрагмент отвечает за все остальные вкладки которые есть в chartactivity
 class FragmentInformation(private var ticker : String, private var type : String) : Fragment() {
 
-    private lateinit var myView : View
-    private lateinit var listView : ListView
-    private lateinit var listInformation : ArrayList<String>
+    private lateinit var myView : View//view фрагмента
+    private lateinit var listView : ListView//listview для отображения информации
+    private lateinit var listInformation : ArrayList<String>//список того что будет в listview
 
     companion object {
 
@@ -34,10 +35,12 @@ class FragmentInformation(private var ticker : String, private var type : String
         myView = inflater.inflate(R.layout.fragment_information, container, false)
 
         retainInstance = true
+
+        //иниициализируем listview
         listView = myView.findViewById(R.id.list_view)
 
         var url = ""
-
+        //определяем какой должна быть сслыка в зависимости от типа вкладок
         when(type){
             requireContext().resources.getString(R.string.summary) -> url = EnumListName.SUMMARY.value
             requireContext().resources.getString(R.string.recommendation) -> url = EnumListName.RECOMMENDATION.value
@@ -45,11 +48,10 @@ class FragmentInformation(private var ticker : String, private var type : String
             requireContext().resources.getString(R.string.news) -> url =  EnumListName.NEWS.value
         }
 
+        //далее устанавливаем наш тикер и подружаем информациию
         url = url.replace(EnumListName.MY_SYMBOL.value, ticker)
         val r = Request.Builder().url(url).build()
-
         val client = OkHttpClient()
-
         client.newCall(r).enqueue(object : Callback {
             override fun onResponse(call: Call, response: Response) {
                 val body = response.body()?.string()
@@ -58,18 +60,21 @@ class FragmentInformation(private var ticker : String, private var type : String
                     listInformation = ArrayList()
                     val handler = Handler(Looper.getMainLooper())
                     handler.post {
+                        //в зависимости от типа вызываю нужную функцию
                         when(type){
                             requireContext().resources.getString(R.string.summary) -> listInformation = parsDataSummary(body)
                             requireContext().resources.getString(R.string.recommendation) -> listInformation = parsDataRecommendation(body)
                             requireContext().resources.getString(R.string.newsSentiment) -> listInformation = parsDataNewsSentiment(body)
                             requireContext().resources.getString(R.string.news) -> listInformation = parsDataNews(body)
                         }
+                        //и передаю список в adapter
                         listView.adapter = Adapter(listInformation, requireContext())
                     }
                 }
             }
 
             override fun onFailure(call: Call, e: IOException) {
+                //так же проверяю наличие интернета
                 if(!InternetFunctions.hasConnection(requireContext())){
                     val intent = Intent(requireContext(), MainActivity::class.java)
                     requireContext().startActivity(intent)
@@ -79,13 +84,13 @@ class FragmentInformation(private var ticker : String, private var type : String
         return myView
     }
 
+    //в этих четырех функциях я разбираю json файл какуй функцию вызывать зависит от того какая вкладка
     private fun parsDataSummary(text : String) : ArrayList<String>{
         val lst = ArrayList<String>()
         val json = JSONObject(text)
         lst.add(json.get("longBusinessSummary").toString())
         return lst
     }
-
     private fun parsDataRecommendation(text : String): ArrayList<String>{
         val lst = ArrayList<String>()
         val json = JSONObject(text)
@@ -102,7 +107,6 @@ class FragmentInformation(private var ticker : String, private var type : String
         }
         return lst
     }
-
     private fun parsDataNewsSentiment(text: String) : ArrayList<String>{
         val lst = ArrayList<String>()
         val json = JSONObject(text)
@@ -124,7 +128,6 @@ class FragmentInformation(private var ticker : String, private var type : String
         lst.add(strElement)
         return lst
     }
-
     private fun parsDataNews(text : String) : ArrayList<String>{
         val lst = ArrayList<String>()
         val json = JSONObject(text)
@@ -139,6 +142,7 @@ class FragmentInformation(private var ticker : String, private var type : String
 
 }
 
+//это адаптер для listview все стандартно
 class Adapter(private var items : ArrayList<String>, context : Context)
     : ArrayAdapter<String>(context, R.layout.element_listview_information, items){
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {

@@ -18,6 +18,7 @@ import java.io.IOException
 class FunctionsTickers {
     private lateinit var sPref : SharedPreferences
 
+    //эта функция проверяет тике в списке favorite или нет
     public fun checkStatusSharedPreference(ticker: String, context: Context) : Boolean{sPref = context.getSharedPreferences(EnumListName.FAVORITES_TICKERS.value, Context.MODE_PRIVATE)
         if(sPref.contains(EnumListName.FAVORITES_TICKERS.value)){
             val str = sPref.getString(EnumListName.FAVORITES_TICKERS.value, "")
@@ -33,7 +34,7 @@ class FunctionsTickers {
             return false
         }
     }
-
+    //эта функция сохраняет тикер в список favorite
     public fun saveTickersFavorites(ticker : String, context: Context)
     {
         sPref = context.getSharedPreferences(EnumListName.FAVORITES_TICKERS.value, Context.MODE_PRIVATE)
@@ -57,7 +58,7 @@ class FunctionsTickers {
         }
 
     }
-
+    //эта функция удаляет тикер из списка favorite
     public fun delayTickersFavorites(ticker : String, context: Context){
         sPref = context.getSharedPreferences(EnumListName.FAVORITES_TICKERS.value, Context.MODE_PRIVATE)
         if(sPref.contains(EnumListName.FAVORITES_TICKERS.value)){
@@ -76,7 +77,7 @@ class FunctionsTickers {
 
         }
     }
-
+    //эта функция возвращает список favorite
     public fun listFavoriteTickers(context: Context) :ArrayList<String> {
         sPref = context.getSharedPreferences(EnumListName.FAVORITES_TICKERS.value, Context.MODE_PRIVATE)
         if(sPref.contains(EnumListName.FAVORITES_TICKERS.value)) {
@@ -86,7 +87,8 @@ class FunctionsTickers {
         }
         return ArrayList()
     }
-
+    //эта функция меняет два тикера в списке favorite местами это нужно для того чтобы запомнить порядок в котором мы должны вывести тикеры
+    //и запомнить их после перестановки
     public fun replacePosition(fromPosition: Int, toPosition: Int, context : Context){
         val lst = listFavoriteTickers(context)
         val ticker = lst[fromPosition]
@@ -102,7 +104,7 @@ class FunctionsTickers {
         ed.putString(EnumListName.FAVORITES_TICKERS.value, saveStr)
         ed.apply()
     }
-
+    //эта функция удаляет тикер из списка favorite по позиции
     public fun delayTickerFavorite(position : Int, context : Context){
         val lst = listFavoriteTickers(context)
         lst.removeAt(position)
@@ -116,7 +118,8 @@ class FunctionsTickers {
         ed.putString(EnumListName.FAVORITES_TICKERS.value, saveStr)
         ed.apply()
     }
-
+    //эта функция вызывается при долгом нажатии на элемент горизонтального списка
+    //и выводит сообщение с уточнением хотим ли мы добавить тикер в избранное
     public fun alertDialog(text : String, ticker: String, mainActivity: MainActivity,
                            context: Context, view : View, viewModel: MyViewModel<String>) : AlertDialog.Builder {
         val alert : AlertDialog
@@ -145,7 +148,7 @@ class FunctionsTickers {
         return builder
     }
 
-
+    //эта функция вызывается с диалогового окна исохраняет информацию о отм тикере который мы добавляем в избранное
     private fun loadCompanyInformation(ticker : String, mainActivity: MainActivity, context: Context, viewModel: MyViewModel<String>){
         var url = EnumListName.QUOTE.value
         url = url.replace(EnumListName.MY_SYMBOL.value, ticker)

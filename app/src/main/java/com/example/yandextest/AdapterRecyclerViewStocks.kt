@@ -22,8 +22,9 @@ import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.math.pow
 
-open class AdapterRecyclerViewStocks(private val values: ArrayList<CellInformation>,
-                                     private var viewModelListFavorite : MyViewModel<ArrayList<String>>,
+//этот recycler view используется для вкладок stocks и favorite но для favorite мы его переопределяем
+open class AdapterRecyclerViewStocks(private val values: ArrayList<CellInformation>,//элементы
+                                     private var viewModelListFavorite : MyViewModel<ArrayList<String>>,//viewmodel который срабатывает при изменение списка favorite
                                      private var owner : LifecycleOwner,
                                      private var context: Context) :
     RecyclerView.Adapter<AdapterRecyclerViewStocks.MyViewHolder>() {
@@ -37,6 +38,7 @@ open class AdapterRecyclerViewStocks(private val values: ArrayList<CellInformati
 
         view = itemView
 
+        //обрабатываю клик на view и запуска активность
         itemView.setOnClickListener {
             if(InternetFunctions.hasConnection(context)){
                 val intent = Intent(context, ChartActivity::class.java)
@@ -51,19 +53,29 @@ open class AdapterRecyclerViewStocks(private val values: ArrayList<CellInformati
     }
 
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
+        //ставлю соответствующий фон для itemview
         if(position % 2 == 0){
             holder.containerView.setBackgroundColor(context.resources.getColor(R.color.light_gray))
         }else{
             holder.containerView.setBackgroundColor(context.resources.getColor(R.color.white))
         }
 
+        //здесь я беру инфу со списка и устанавливаю его в textview
         holder.textViewTicker.text = values[position].ticker
         holder.textViewCompany.text = values[position].company
+        //эта функция устанавливает инфу с процентным изменение цены
         settingTextViewDifferencePrice(holder.textViewDifferencePrice, holder.textViewPrice, values[position])
+
+        //здесь я подгружаю картинки. Вы наверное обратили внимание, что картинки загружены не все это связанно с ограничение api
+        //finnhub предоставляет инфу с картинками, но всего 60 запросов в минуту, но я заметил, что почти все ссылки на картинки одинаковы меняется только тикер
+        //поэтому я не стал отправлять запрос а сразу создаю ссылку и в конце просто заменя тикер
+        //но это работает не со всеми тикерами
+        //я надеюсь что то что я сделал с картинками даст вам понять что с платным api я сделал бы все нормально
         Picasso.get()
                 .load(EnumListName.PICASSO_URL.value.replace(EnumListName.MY_SYMBOL.value, values[position].ticker))
                 .into(holder.imageLogo)
 
+        //здесь я обратываю нажатие на звездочку
         val functionsTickers = FunctionsTickers()
         holder.starButton.setOnClickListener {
             onClick(functionsTickers, position, holder)
@@ -74,6 +86,7 @@ open class AdapterRecyclerViewStocks(private val values: ArrayList<CellInformati
 
     }
 
+    //здесь я добавляю тикер в избранное или удаляю зависит
     open fun onClick(functionsTickers : FunctionsTickers, position: Int, holder: MyViewHolder){
         if (functionsTickers.checkStatusSharedPreference(values[position].ticker, context)) {
             functionsTickers.delayTickersFavorites(values[position].ticker, context)
@@ -82,12 +95,15 @@ open class AdapterRecyclerViewStocks(private val values: ArrayList<CellInformati
 
         }
 
+        //и отправляю сообщение во viewmodel
         viewModelListFavorite.user = functionsTickers.listFavoriteTickers(context)
         viewModelListFavorite.getUsersValue()
     }
 
+    //здесь я устанавливаю слушатель для viewmodel
     open fun checkStars(holder: MyViewHolder, position: Int){
         viewModelListFavorite.getUsersValue().observe(owner, Observer {
+            //определяю есть ли звезда в списке favorite и в зависимости от этого определяю какой она должна быть
             val functionsTickers = FunctionsTickers()
             val lst = functionsTickers.listFavoriteTickers(context)
             for(i in lst){
@@ -127,18 +143,24 @@ open class AdapterRecyclerViewStocks(private val values: ArrayList<CellInformati
     }
 
 
-
+    //здесь я устанавливаю значение в текст с процентным изменением цены, определяю цвет, знак пллюс иди минус и значек валюты
     private fun settingTextViewDifferencePrice(differencePriceTextView : TextView, priceTextView: TextView, cellInformation : CellInformation){
         var number = 0.0
         var percent = 0.0
         var symbol = ""
         if(cellInformation.differencePrice.contains('-')){
-            number = cellInformation.differencePrice.substring(1).toDouble()
+            //number когда изменение ноль содержит нули поэтому если неудается преобразовать значит значение ноль
+            try {
+                number = cellInformation.differencePrice.substring(1).toDouble()
+            }catch (e : Exception){
+                number = 0.0
+            }
             percent = cellInformation.differencePricePercent.substring(1).toDouble()
             differencePriceTextView.setTextColor(context.resources.getColor(R.color.red))
             symbol = "-"
         }else{
             symbol = "+"
+            //number когда изменение ноль содержит нули поэтому если неудается преобразовать значит значение ноль
             try {
                 number = cellInformation.differencePrice.toDouble()
             }catch (e : Exception){
@@ -149,8 +171,9 @@ open class AdapterRecyclerViewStocks(private val values: ArrayList<CellInformati
             differencePriceTextView.setTextColor(context.resources.getColor(R.color.green))
         }
 
+        //для определения значка валюты я использую встроенную библиотеку Currency
         var currency : Currency
-        var defaultFactoryDigit : Int = 1
+        var defaultFactoryDigit : Int = 1//это число содержит сколько цифр обычно используют для округления в этой стране
         var symbolCurrency : String = ""
         try {
             if (cellInformation.currency != "null") {
@@ -178,7 +201,7 @@ open class AdapterRecyclerViewStocks(private val values: ArrayList<CellInformati
 }
 
 
-
+//этот класс отвечает за отступы между элементами
 class SpacesItemDecoration(private val space: Int) : ItemDecoration() {
     override fun getItemOffsets(outRect: Rect, itemPosition: Int, parent: RecyclerView) {
 
