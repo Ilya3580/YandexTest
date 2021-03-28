@@ -62,7 +62,14 @@ open class RecyclerViewHorizontal (private var values: ArrayList<String>) :
                 sPref = context.getSharedPreferences(POPULAR_LIST, Context.MODE_PRIVATE)
                 if(sPref.contains(TICKERS)){
                     //далле я удаляю его из сохраненого списка
-                    val ticker = values[position]
+                    var i= 0//поскольку элкементы уже могли удалятся то позиции могли изменится поэтому нужно по новой определить индекс
+                    for (j in (0 until values.count())){
+                        if(values[j] == it.findViewById<TextView>(R.id.cell_horizontal_recycler_view).text.toString()){
+                            i = j
+                            break
+                        }
+                    }
+                    val ticker = values[i]
                     val lstHistory = ArrayList(sPref.getString(TICKERS, "")!!.split("$"))
                     lstHistory.remove(ticker)
                     var saveStr = ""
@@ -78,8 +85,8 @@ open class RecyclerViewHorizontal (private var values: ArrayList<String>) :
                     ed.apply()
 
                     //здесь я удаляю его view
-                    values.removeAt(position)
-                    notifyItemRemoved(position)
+                    values.removeAt(i)
+                    notifyItemRemoved(i)
                 }
                 return@setOnLongClickListener true
             }
