@@ -71,9 +71,18 @@ open class AdapterRecyclerViewStocks(private val values: ArrayList<CellInformati
         //поэтому я не стал отправлять запрос а сразу создаю ссылку и в конце просто заменя тикер
         //но это работает не со всеми тикерами
         //я надеюсь что то что я сделал с картинками даст вам понять что с платным api я сделал бы все нормально
-        Picasso.get()
-                .load(EnumListName.PICASSO_URL.value.replace(EnumListName.MY_SYMBOL.value, values[position].ticker))
+        if(values[position].ticker == "YNDX") {//картинку яндекса я использую также в качестве иконки приложения так что пусть она же и будет картинкой для тикера
+            holder.imageLogo.setImageDrawable(context.resources.getDrawable(R.drawable.icon))
+        }else{
+            Picasso.get()
+                .load(
+                    EnumListName.PICASSO_URL.value.replace(
+                        EnumListName.MY_SYMBOL.value,
+                        values[position].ticker
+                    )
+                )
                 .into(holder.imageLogo)
+        }
 
         //здесь я обратываю нажатие на звездочку
         val functionsTickers = FunctionsTickers()
