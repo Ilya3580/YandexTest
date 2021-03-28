@@ -487,7 +487,7 @@ class FragmentChart(private var ticker : String) : Fragment() {
 
     private fun startWebSocket(){
         //здесь я запускаю websocket
-        val request = Request.Builder().url("wss://ws.finnhub.io?token=c15isdv48v6tvr5klgag").build()
+        val request = Request.Builder().url(EnumListName.WEB_SOCKET.value).build()
         val listener = Listener(viewModelWebSocket, requireContext(), ticker)
         client = OkHttpClient()
         client.newWebSocket(request, listener)

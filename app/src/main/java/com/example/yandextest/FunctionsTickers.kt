@@ -11,6 +11,7 @@ import android.view.View
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
+import androidx.cardview.widget.CardView
 import com.google.android.material.snackbar.Snackbar
 import okhttp3.*
 import java.io.IOException
@@ -125,8 +126,8 @@ class FunctionsTickers {
         val alert : AlertDialog
         val builder = AlertDialog.Builder(context)
         val textView = view.findViewById<TextView>(R.id.textView)
-        val textViewOk = view.findViewById<TextView>(R.id.textViewOk)
-        val textViewNo = view.findViewById<TextView>(R.id.textViewNo)
+        val textViewOk = view.findViewById<CardView>(R.id.textViewOk)
+        val textViewNo = view.findViewById<CardView>(R.id.textViewNo)
         textView.text = text
         builder.setView(view)
 

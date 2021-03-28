@@ -160,23 +160,25 @@ open class AdapterRecyclerViewStocks(private val values: ArrayList<CellInformati
         if(cellInformation.differencePrice.contains('-')){
             //number когда изменение ноль содержит нули поэтому если неудается преобразовать значит значение ноль
             try {
-                number = cellInformation.differencePrice.substring(1).toDouble()
+                number = cellInformation.differencePrice.substring(1).trim().toDouble()
+                percent = cellInformation.differencePricePercent.substring(1).trim().toDouble()
             }catch (e : Exception){
                 number = 0.0
+                percent = 0.0
             }
-            percent = cellInformation.differencePricePercent.substring(1).toDouble()
             differencePriceTextView.setTextColor(context.resources.getColor(R.color.red))
             symbol = "-"
         }else{
             symbol = "+"
             //number когда изменение ноль содержит нули поэтому если неудается преобразовать значит значение ноль
             try {
-                number = cellInformation.differencePrice.toDouble()
+                number = cellInformation.differencePrice.trim().toDouble()
+                percent = cellInformation.differencePricePercent.trim().toDouble()
             }catch (e : Exception){
                 number = 0.0
+                percent = 0.0
             }
 
-            percent = cellInformation.differencePricePercent.toDouble()
             differencePriceTextView.setTextColor(context.resources.getColor(R.color.green))
         }
 

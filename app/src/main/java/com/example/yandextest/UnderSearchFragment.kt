@@ -68,15 +68,20 @@ class UnderSearchFragment() : Fragment() {
         recyclerViewHistory.layoutManager = StaggeredGridLayoutManager(2, LinearLayoutManager.HORIZONTAL)
         if(sPref.contains(TICKERS)){
             //загружаем список истории
-            lstHistory = ArrayList(sPref.getString(TICKERS, "")!!.split("$"))
+            if(sPref.getString(TICKERS, "") != "") {
+                lstHistory = ArrayList(sPref.getString(TICKERS, "")!!.split("$"))
+            }
         }
         //если спиок пустой то убираем textview
         if(lstHistory.count() == 0){
             textViewHistory.visibility = View.GONE
+            adapterHistory = RecyclerViewHorizontal(lstHistory)
+            //это свойство с помощиб которого можно удалять элементы долгим нажатием оно будет включенно только в списке истории
+            adapterHistory.flagOnLongClick = true
+            recyclerViewHistory.adapter = adapterHistory
         }else{//если спиок не пустой то добавляем список в адаптер и включаем textview над списком
             textViewHistory.visibility = View.VISIBLE
             adapterHistory = RecyclerViewHorizontal(lstHistory)
-            //это свойство с помощиб которого можно удалять элементы долгим нажатием оно будет включенно только в списке истории
             adapterHistory.flagOnLongClick = true
             recyclerViewHistory.adapter = adapterHistory
         }
@@ -88,9 +93,9 @@ class UnderSearchFragment() : Fragment() {
     private fun saveList(){
         var str = ""
         for(i in (0 until lstHistory.count())){
-            str = if(i == 0){
+            str = if (i == 0) {
                 lstHistory[i]
-            }else{
+            } else {
                 str + "$" + lstHistory[i]
             }
         }
@@ -99,9 +104,9 @@ class UnderSearchFragment() : Fragment() {
         ed.apply()
     }
 
-    //эта функция добавляет или добавляет элемент в списоке истории
+    //эта функция добавляет элемент в списоке истории
     public fun userUpdateQuestions(question : String){
-        if(question != ""){
+        if(question.trim() != ""){
             val i = lstHistory.indexOf(question)
             if(i >= 0){
                 lstHistory.removeAt(i)
@@ -109,6 +114,10 @@ class UnderSearchFragment() : Fragment() {
 
             lstHistory.add(0, question)
             saveList()
+
+            if(lstHistory.count() > 0){
+                textViewHistory.visibility = View.VISIBLE
+            }
 
             adapterHistory.setValues(lstHistory)
         }

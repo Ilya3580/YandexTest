@@ -109,8 +109,11 @@ class FragmentRecyclerViewSection(
         })
     }
 
+
+    var number = 0//эта переменная нужна чтобы узнать что последний запрос был выполнен
     //в api mboum можно отправить на получание инфы 50 тикеров здесь я набираю 50 тикеров и отправляю
     private fun convertUrlParsCellInformation(){
+        number = 0
         //я добавляю все тикеры в tickersLoad через запятую а потом отправляю запрос
         val classRequests = ClassRequests()
         val countTickersOneRequest = 50
@@ -149,7 +152,7 @@ class FragmentRecyclerViewSection(
             if(count == countTickersOneRequest || countTickersOneRequest * number + count == lst.count()){
                 count = 0
                 number ++
-                loadListCellInformation(tickersLoad, number, lastCount)
+                loadListCellInformation(tickersLoad, lastCount)
 
             }
 
@@ -159,7 +162,7 @@ class FragmentRecyclerViewSection(
 
     }
 
-    private fun loadListCellInformation(lstTicker : String, number : Int, lastNumber : Int){
+    private fun loadListCellInformation(lstTicker : String, lastNumber : Int){
         var url = EnumListName.QUOTE.value
         url = url.replace(EnumListName.MY_SYMBOL.value, lstTicker)
         val r = Request.Builder().url(url).build()
@@ -175,6 +178,7 @@ class FragmentRecyclerViewSection(
                     val classRequests = ClassRequests()
                     //в этой функции я их и обрабатываю и сохраняю в память приложения
                     classRequests.parsTickersData(body, lst, requireContext())
+                    number++
                     if(number == lastNumber) {
                         //эта кусок кода сработает по завершению последнего запроса
                         //здесь я их получаю из памяти и сохраняю в список
