@@ -59,6 +59,7 @@ open class RecyclerViewHorizontal (private var values: ArrayList<String>) :
         //далле я обрабатываю долгое нажатие оно будет работать только для списка с истоией
         if(_flagOnLongClick) {
             holder.itemView.setOnLongClickListener {
+                sPref = context.getSharedPreferences(POPULAR_LIST, Context.MODE_PRIVATE)
                 if(sPref.contains(TICKERS)){
                     //далле я удаляю его из сохраненого списка
                     val ticker = values[position]
