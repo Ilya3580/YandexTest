@@ -314,56 +314,65 @@ class FragmentChart(private var ticker : String) : Fragment() {
     }
 
     private fun parsHistoryData(text : String, period: String){
-        if(text.contains("error")){
-            Toast.makeText(context, "require api", Toast.LENGTH_SHORT).show()
-            return
+        try {
+            //здесь я получаю список инсторических данных и сохраняю в спикок
+            val json = JSONObject(text)
+            val jsonArray = json.getJSONObject("items")
+            lstDataRequestChartClass = ArrayList()
+            for (i in (0 until jsonArray.names().length())) {
+                val nameJson = jsonArray.getJSONObject(jsonArray.names()[i].toString())
+                val dateCode = jsonArray.names()[i].toString().toInt()
+                val high = nameJson.get("high").toString().toFloat()
+                val low = nameJson.get("low").toString().toFloat()
+                val open = nameJson.get("open").toString().toFloat()
+                val close = nameJson.get("close").toString().toFloat()
+                if (open != 0f && close != 0f) {
+                    lstDataRequestChartClass.add(
+                        StickChartInformation(
+                            dateCode,
+                            open,
+                            high,
+                            low,
+                            close
+                        )
+                    )
+                }
+
+            }
+
+            //так как в api которое я использую нет данных за неделю, день и т.д. то вызываю другие исторические данные и обрезаю их до нужных
+            lstDataRequestChartClass =
+                StickChartInformation.convertListPeriod(period, lstDataRequestChartClass)
+
+            //далле я ищу и устанвливаю минимальрые значения для y для x 'nj просто ноль и длина списка
+            minX = 0f
+            maxX = lstDataRequestChartClass.count().toFloat()
+            for (i in lstDataRequestChartClass) {
+                if (i.high > maxY) {
+                    maxY = i.high
+                }
+
+                if (i.high < minY) {
+                    minY = i.high
+                }
+
+                if (i.low > maxY) {
+                    maxY = i.low
+                }
+
+                if (i.low < minY) {
+                    minY = i.low
+                }
+            }
+
+            //обновляю дынные графика
+            updateData()
+
+            //запускаю websocket
+            startWebSocket()
+        }catch (e : Exception){
+            //сюда он попадет только когда будет ограничение  api и у пользователя будет бескнечная загрузка
         }
-        //здесь я получаю список инсторических данных и сохраняю в спикок
-        val json = JSONObject(text)
-        val jsonArray = json.getJSONObject("items")
-        lstDataRequestChartClass = ArrayList()
-        for(i in (0 until jsonArray.names().length())){
-            val nameJson = jsonArray.getJSONObject(jsonArray.names()[i].toString())
-            val dateCode = jsonArray.names()[i].toString().toInt()
-            val high = nameJson.get("high").toString().toFloat()
-            val low = nameJson.get("low").toString().toFloat()
-            val open = nameJson.get("open").toString().toFloat()
-            val close = nameJson.get("close").toString().toFloat()
-            if(open != 0f && close != 0f){
-                lstDataRequestChartClass.add(StickChartInformation(dateCode, open, high, low, close))
-            }
-
-        }
-
-        //так как в api которое я использую нет данных за неделю, день и т.д. то вызываю другие исторические данные и обрезаю их до нужных
-        lstDataRequestChartClass = StickChartInformation.convertListPeriod(period, lstDataRequestChartClass)
-
-        //далле я ищу и устанвливаю минимальрые значения для y для x 'nj просто ноль и длина списка
-        minX = 0f
-        maxX = lstDataRequestChartClass.count().toFloat()
-        for(i in lstDataRequestChartClass){
-            if(i.high > maxY){
-                maxY = i.high
-            }
-
-            if(i.high < minY){
-                minY = i.high
-            }
-
-            if(i.low > maxY){
-                maxY = i.low
-            }
-
-            if(i.low < minY){
-                minY = i.low
-            }
-        }
-
-        //обновляю дынные графика
-        updateData()
-
-        //запускаю websocket
-        startWebSocket()
     }
 
     private fun updateData(){

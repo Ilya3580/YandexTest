@@ -88,7 +88,6 @@ class FragmentInformation(private var ticker : String, private var type : String
     //в этих четырех функциях я разбираю json файл какуй функцию вызывать зависит от того какая вкладка
     private fun parsDataSummary(text : String) : ArrayList<String>{
         if(text.contains("error")){
-            Toast.makeText(context, "require api", Toast.LENGTH_SHORT).show()
             return ArrayList()
         }
         val lst = ArrayList<String>()
@@ -98,7 +97,6 @@ class FragmentInformation(private var ticker : String, private var type : String
     }
     private fun parsDataRecommendation(text : String): ArrayList<String>{
         if(text.contains("error")){
-            Toast.makeText(context, "require api", Toast.LENGTH_SHORT).show()
             return ArrayList()
         }
         val lst = ArrayList<String>()
@@ -118,7 +116,6 @@ class FragmentInformation(private var ticker : String, private var type : String
     }
     private fun parsDataNewsSentiment(text: String) : ArrayList<String>{
         if(text.contains("error")){
-            Toast.makeText(context, "require api", Toast.LENGTH_SHORT).show()
             return ArrayList()
         }
         val lst = ArrayList<String>()
@@ -143,7 +140,6 @@ class FragmentInformation(private var ticker : String, private var type : String
     }
     private fun parsDataNews(text : String) : ArrayList<String>{
         if(text.contains("error")){
-            Toast.makeText(context, "require api", Toast.LENGTH_SHORT).show()
             return ArrayList()
         }
         val lst = ArrayList<String>()
