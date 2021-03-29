@@ -12,6 +12,7 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.ListView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import okhttp3.*
 import org.json.JSONObject
@@ -86,12 +87,20 @@ class FragmentInformation(private var ticker : String, private var type : String
 
     //в этих четырех функциях я разбираю json файл какуй функцию вызывать зависит от того какая вкладка
     private fun parsDataSummary(text : String) : ArrayList<String>{
+        if(text.contains("error")){
+            Toast.makeText(context, "require api", Toast.LENGTH_SHORT).show()
+            return ArrayList()
+        }
         val lst = ArrayList<String>()
         val json = JSONObject(text)
         lst.add(json.get("longBusinessSummary").toString())
         return lst
     }
     private fun parsDataRecommendation(text : String): ArrayList<String>{
+        if(text.contains("error")){
+            Toast.makeText(context, "require api", Toast.LENGTH_SHORT).show()
+            return ArrayList()
+        }
         val lst = ArrayList<String>()
         val json = JSONObject(text)
         val jsonArray = json.getJSONArray("trend")
@@ -108,6 +117,10 @@ class FragmentInformation(private var ticker : String, private var type : String
         return lst
     }
     private fun parsDataNewsSentiment(text: String) : ArrayList<String>{
+        if(text.contains("error")){
+            Toast.makeText(context, "require api", Toast.LENGTH_SHORT).show()
+            return ArrayList()
+        }
         val lst = ArrayList<String>()
         val json = JSONObject(text)
         var strElement = "buzz\n"
@@ -129,6 +142,10 @@ class FragmentInformation(private var ticker : String, private var type : String
         return lst
     }
     private fun parsDataNews(text : String) : ArrayList<String>{
+        if(text.contains("error")){
+            Toast.makeText(context, "require api", Toast.LENGTH_SHORT).show()
+            return ArrayList()
+        }
         val lst = ArrayList<String>()
         val json = JSONObject(text)
         val jsonArray = json.getJSONArray("item")

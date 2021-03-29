@@ -99,6 +99,10 @@ class ClassRequests {
     }
     //эта функция разбирает json и возвращает список зар=груженных тикеров
     public fun parsCheckURL(text : String, context: Context) : ArrayList<String>{
+        if(text.contains("error")){
+            Toast.makeText(context, "require api", Toast.LENGTH_SHORT).show()
+            return ArrayList()
+        }
         sPref = context.getSharedPreferences(REQUESTS, Context.MODE_PRIVATE)
         val lst = ArrayList<String>()
         val json = JSONArray(text).getJSONObject(0).getJSONArray("quotes")

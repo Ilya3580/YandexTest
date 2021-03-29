@@ -16,6 +16,7 @@ import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.ProgressBar
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
@@ -313,6 +314,10 @@ class FragmentChart(private var ticker : String) : Fragment() {
     }
 
     private fun parsHistoryData(text : String, period: String){
+        if(text.contains("error")){
+            Toast.makeText(context, "require api", Toast.LENGTH_SHORT).show()
+            return
+        }
         //здесь я получаю список инсторических данных и сохраняю в спикок
         val json = JSONObject(text)
         val jsonArray = json.getJSONObject("items")
