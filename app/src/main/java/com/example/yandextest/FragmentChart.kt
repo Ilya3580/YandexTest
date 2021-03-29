@@ -497,9 +497,4 @@ class FragmentChart(private var ticker : String) : Fragment() {
 
     }
 
-    override fun onPause() {
-        super.onPause()
-
-
-    }
 }
