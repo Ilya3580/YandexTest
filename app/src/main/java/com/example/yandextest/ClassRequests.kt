@@ -81,7 +81,7 @@ class ClassRequests {
             val price = json.getJSONObject(i).get("regularMarketPrice").toString()
             val differencePrice = json.getJSONObject(i).get("regularMarketChange").toString()
             val differencePricePercent = json.getJSONObject(i).get("regularMarketChangePercent").toString()
-            val currency = json.getJSONObject(i).get("financialCurrency").toString()
+            val currency = json.getJSONObject(i).get("currency").toString()
             for(j in (0 until lst.count())){
                 if(lst[j].ticker == ticker){
                     lst[j].company = company
