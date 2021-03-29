@@ -174,7 +174,7 @@ class FragmentChart(private var ticker : String) : Fragment() {
         //это слушатель viewmodel которы отвечает за сообщения websocket
         viewModelWebSocket.getUsersValue().observe(viewLifecycleOwner, Observer {
             //этот тип слушателей вызвается при создании поэтому надо провереть тот ли это случай
-            if(lstDataRequestChartClass.count() > 0) {
+            if(lstDataRequestChartClass.count() > 0 && it.price > 0) {
                 var periodInt = 0
                 //так как дата кодируется в формете unix то эта разница для каждо типа которая должна быть
                 //эта разница берется не с воздуха а получается путем преобразований времени в секнуду
@@ -324,7 +324,10 @@ class FragmentChart(private var ticker : String) : Fragment() {
             val low = nameJson.get("low").toString().toFloat()
             val open = nameJson.get("open").toString().toFloat()
             val close = nameJson.get("close").toString().toFloat()
-            lstDataRequestChartClass.add(StickChartInformation(dateCode, open, high, low, close))
+            if(open != 0f && close != 0f){
+                lstDataRequestChartClass.add(StickChartInformation(dateCode, open, high, low, close))
+            }
+
         }
 
         //так как в api которое я использую нет данных за неделю, день и т.д. то вызываю другие исторические данные и обрезаю их до нужных
