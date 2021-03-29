@@ -1,9 +1,9 @@
 package com.example.yandextest
 // здесь я храню спико запрсов, имен, и т.д.
 enum class EnumListName(val value: String) {
-    KEY_MBOUM("b0tGXI8PUxeykiLsk2DmlNi9UMebVwBy9e8jWgxvAZdXCJ3cDG3Rccj6jzr1"),
-    KEY_FINNHUB("c15isdv48v6tvr5klgag"),
-    KEY_ALPHAVANTAGE("Q11YRI420QDDGFHE"),
+    KEY_MBOUM("FPbZceA9nB9JwZYXjXJj4Dot4l6rgCj4ISQ4pLsNy9UOaq1GuC6oaATK2MfY"),
+    KEY_FINNHUB("c1gebin48v6p69n8u4t0"),
+    KEY_ALPHAVANTAGE("IONIFB3VXWUN4RMW"),
     MY_SYMBOL("<MY_SYMBOL>"),
     MY_SYMBOL2("<MY_SYMBOL2>"),
     STOCKS_TICKERS("https://mboum.com/api/v1/tr/trending?apikey=" + KEY_MBOUM.value),
