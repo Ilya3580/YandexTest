@@ -74,6 +74,9 @@ class ClassRequests {
     }
     //эта функция разбирает json и сохраняет информацию о компании
     public fun parsTickersData(text: String, lst : ArrayList<CellInformation>, context: Context){
+        if(text.contains("error")){
+            return
+        }
         val json = JSONArray(text)
         for(i in (0 until json.length())) {
             val ticker = json.getJSONObject(i).get("symbol")

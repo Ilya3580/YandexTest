@@ -99,14 +99,20 @@ class StickChartInformation {
 
 //этот класс хранит информацию которую возвращает websocket
 class StickWebSocket{
+    private var _ticker : String = ""
     private var _dateCode : Int = 0
     private var _price : Float = 0f
 
     constructor(){}
-    constructor(_dateCode: Int, _price: Float) {
+    constructor(_ticker : String, _dateCode: Int, _price: Float) {
         this._dateCode = _dateCode
         this._price = _price
+        this._ticker = _ticker
     }
+
+    public var ticker : String
+        get() {return _ticker}
+        set(value) {_ticker = value}
 
     public var dateCode : Int
         get() {return _dateCode}

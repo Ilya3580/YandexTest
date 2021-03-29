@@ -10,11 +10,9 @@ import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
 import android.widget.ImageButton
 import android.widget.ProgressBar
 import android.widget.TextView
@@ -29,7 +27,6 @@ import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
 import okhttp3.*
 import org.json.JSONObject
 import java.io.IOException
-import java.util.*
 import kotlin.collections.ArrayList
 
 //этот класс отвечает за графики в конструкторе мы передаем ему тикер
@@ -48,8 +45,7 @@ class FragmentChart(private var ticker : String) : Fragment() {
     private lateinit var viewModelWebSocket : MyViewModel<StickWebSocket>//viewmodel который получает сообщения от Listener webSocket
     private var textView : TextView? = null//textView с ценой акций
     private lateinit var chartIndicator : ImageButton//этот индикатор при нажатии на него мы меняем тип графика
-    var symbolPeriod = "D"//начальный символ позже мы его переопределяем на тот который сохранился при просмотре в последний оаз
-
+    var symbolPeriod = ""//символ в котором хранится период в соответствии с периодом
     //следующие пять строк нужны для сохранения информации
     private lateinit var sPref : SharedPreferences
     private val CHART = "CHART"
@@ -183,7 +179,7 @@ class FragmentChart(private var ticker : String) : Fragment() {
                 //так как дата кодируется в формете unix то эта разница для каждо типа которая должна быть
                 //эта разница берется не с воздуха а получается путем преобразований времени в секнуду
                 //то есть время период для дневного графика это 5 минут а это 300 секнуд, для недельного 15 минут а это 900 мин
-                when (symbolPeriod) {
+                when (symbolElement) {
                     "D" -> periodInt = 300
                     "W" -> periodInt = 900
                     "M" -> periodInt = 1800
@@ -192,7 +188,8 @@ class FragmentChart(private var ticker : String) : Fragment() {
                     "10Y" -> periodInt = 2592000
                 }
 
-                //здесь я сохраняю данные в нащ список
+                //ниже я сохраняю данные в наш список
+
                 val item = lstDataRequestChartClass[lstDataRequestChartClass.count() - 1]
                 //этот if отвечает нужно ли создать новую свечу или изменить старую
                 //это делается для того чтобы задавать точки и свечи с определенным периодом
@@ -209,8 +206,8 @@ class FragmentChart(private var ticker : String) : Fragment() {
                         item.low = it.price
                     }
                 }else{
-                    //созда.ю новую свечу
-                    lstDataRequestChartClass.add(StickChartInformation(it.dateCode, it.price, 0f,0f,0f))
+                    //создаю новую свечу
+                    lstDataRequestChartClass.add(StickChartInformation(it.dateCode, it.price, it.price,it.price,it.price))
                 }
                 //обновляю данные
                 updateData()
@@ -490,7 +487,7 @@ class FragmentChart(private var ticker : String) : Fragment() {
     private fun startWebSocket(){
         //здесь я запускаю websocket
         val request = Request.Builder().url(EnumListName.WEB_SOCKET.value).build()
-        val listener = Listener(viewModelWebSocket, requireContext(), ticker)
+        val listener = ListenerChart(viewModelWebSocket, requireContext(), ticker)
         client = OkHttpClient()
         client.newWebSocket(request, listener)
         client.dispatcher().executorService().shutdown()

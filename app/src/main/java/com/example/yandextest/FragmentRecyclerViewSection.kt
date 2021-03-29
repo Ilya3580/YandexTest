@@ -8,6 +8,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -20,7 +21,10 @@ import java.io.IOException
 //тип отвечает какой должен быть fragment
 class FragmentRecyclerViewSection(
     private var valueStocksOrFavorite: String,
-    private var viewModelListFavorite: MyViewModel<ArrayList<String>>) : Fragment() {
+    private var viewModelListFavorite: MyViewModel<ArrayList<String>>,
+    private var viewModelListWebSocket : MyViewModel<ArrayList<StickWebSocket>>,
+    private var viewModelInternet : MyViewModel<Boolean>,
+    private var webSocket: WebSocket) : Fragment() {
 
     private lateinit var recyclerView : RecyclerView//recyclerview с нашими объектами
     private lateinit var myView : View
@@ -31,8 +35,8 @@ class FragmentRecyclerViewSection(
     //потому что может произойти так что интренет пропадет когда будут два потоко обрабатывать информацию и оба дадут понять что нет интрнета
 
     companion object {
-        fun newInstance(valueStocksOrFavorite : String, viewModelListFavorite : MyViewModel<ArrayList<String>>)
-                = FragmentRecyclerViewSection(valueStocksOrFavorite, viewModelListFavorite)
+        fun newInstance(valueStocksOrFavorite : String, viewModelListFavorite : MyViewModel<ArrayList<String>>, viewModelListWebSocket : MyViewModel<ArrayList<StickWebSocket>>, viewModelInternet : MyViewModel<Boolean>, webSocket: WebSocket)
+                = FragmentRecyclerViewSection(valueStocksOrFavorite, viewModelListFavorite, viewModelListWebSocket, viewModelInternet, webSocket)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
@@ -59,7 +63,7 @@ class FragmentRecyclerViewSection(
         }else{
             settingFavorite()
             //список favorite я создаю сразу потому что список избранных тикеров сохранен в памяти устройства
-            val custom = AdapterRecyclerViewFavorite(lst, viewModelListFavorite, viewLifecycleOwner,requireContext())
+            val custom = AdapterRecyclerViewFavorite(lst, viewModelListFavorite, viewLifecycleOwner,requireContext(), viewModelListWebSocket,webSocket)
 
             //эту функцию я вызываю чтобы в recycler view favorite был создан слушатель изменения списка favorite
             custom.checkNewFavoriteTickers()
@@ -70,6 +74,7 @@ class FragmentRecyclerViewSection(
             touchHelper.attachToRecyclerView(recyclerView)
             recyclerView.adapter = custom
         }
+
 
         return myView
     }
@@ -185,7 +190,7 @@ class FragmentRecyclerViewSection(
                         classRequests.saveList(requireContext(), lstTickers)
                         val handler = Handler(Looper.getMainLooper())
                         handler.post {
-                            val custom = AdapterRecyclerViewStocks(lst, viewModelListFavorite, viewLifecycleOwner, requireContext())
+                            val custom = AdapterRecyclerViewStocks(lst, viewModelListFavorite, viewLifecycleOwner, requireContext(), viewModelListWebSocket, webSocket)
                             recyclerView.adapter = custom
                             if(mainActivity != null) {
                                 val vm = mainActivity!!.viewModelListPopular
@@ -233,8 +238,9 @@ class FragmentRecyclerViewSection(
     }
 
     //эта функция вызывается если нет интернета
-    private fun notInternet(){
+    public fun notInternet(){
         if(!flagShowNotInternet) {
+            flagShowNotInternet = true
             val handler = Handler(Looper.getMainLooper())
             handler.post {
                 showSaveData()
@@ -248,6 +254,8 @@ class FragmentRecyclerViewSection(
                         if (InternetFunctions.hasConnection(requireContext())) {
                             val handler1 = Handler(Looper.getMainLooper())
                             handler1.post {
+                                viewModelInternet.user = true
+                                viewModelInternet.getUsersValue()
                                 alert.create().dismiss()
                                 settingStocks()
                                 if (mainActivity != null)
@@ -258,7 +266,6 @@ class FragmentRecyclerViewSection(
                     }
                 }).start()
             }
-            flagShowNotInternet = true
         }
     }
 
@@ -268,10 +275,11 @@ class FragmentRecyclerViewSection(
             var listCache = ArrayList<CellInformation>()
             val classRequests = ClassRequests()
             listCache = classRequests.readListCellInformation(requireContext())
-            val custom = AdapterRecyclerViewStocks(listCache, viewModelListFavorite, viewLifecycleOwner, requireContext())
+            val custom = AdapterRecyclerViewStocks(listCache, viewModelListFavorite, viewLifecycleOwner, requireContext(), viewModelListWebSocket, webSocket)
             recyclerView.adapter = custom
         }
     }
+
 
 }
 

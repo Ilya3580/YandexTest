@@ -8,6 +8,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
+import okhttp3.WebSocket
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -15,8 +16,10 @@ import kotlin.collections.ArrayList
 class AdapterRecyclerViewFavorite(private val values: ArrayList<CellInformation>,
                                   private val viewModelListFavorite : MyViewModel<ArrayList<String>>,
                                   private var owner: LifecycleOwner,
-                                  private var context: Context
-) : AdapterRecyclerViewStocks(values, viewModelListFavorite, owner, context), ItemTouchHelperAdapter{
+                                  private var context: Context,
+                                  private var viewModelListWebSocket : MyViewModel<ArrayList<StickWebSocket>>,
+                                  private var webSocket: WebSocket
+) : AdapterRecyclerViewStocks(values, viewModelListFavorite, owner, context, viewModelListWebSocket, webSocket), ItemTouchHelperAdapter{
 
 
     //переопределяю клик на звездочку и удаляю из списка
@@ -93,6 +96,8 @@ class AdapterRecyclerViewFavorite(private val values: ArrayList<CellInformation>
                     values.add(cl)
                     notifyItemChanged(values.count(), cl)
                     notifyItemRangeChanged(0, values.count())
+                    //запускаем подписку на этот элемент в websocket
+                    webSocket.send("{\"type\":\"subscribe\",\"symbol\":\"${cl.ticker}\"}")
                 }
 
             }

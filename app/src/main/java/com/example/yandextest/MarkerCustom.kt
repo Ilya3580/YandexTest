@@ -63,11 +63,11 @@ class MarkerCustom(context: Context?, layoutResource: Int, idPrice : Int, idData
         x = if (e.x < (maxX + minX) / 2) {
             width.toFloat()/1.4.toFloat()
         } else {
-            -width.toFloat() * 1.6.toFloat()
+            -width.toFloat() * 1.4.toFloat()
         }
 
         y = if (e.y < (maxY + minY) / 2) {
-            -height.toFloat() * 1.6.toFloat()
+            -height.toFloat() * 1.4.toFloat()
         } else {
             height.toFloat()/1.4.toFloat()
         }

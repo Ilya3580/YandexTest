@@ -8,6 +8,8 @@ import android.graphics.Typeface
 import android.graphics.drawable.ColorDrawable
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -168,7 +170,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun onCreateViewPager() {
         //здесь я настраиваю viewpager
-        sectionsPagerAdapter = SectionsPagerAdapter(this, supportFragmentManager)
+        sectionsPagerAdapter = SectionsPagerAdapter(this, supportFragmentManager, this)
         viewPager.adapter = sectionsPagerAdapter
 
         tabs = findViewById(R.id.tabs)
@@ -310,6 +312,7 @@ class MainActivity : AppCompatActivity() {
         //здесь я проверяю если была вызвана функция onPause то мы могли вернуться с другой активности и надо проверить списко favorite
         if(flagPause){
             flagPause = false
+            sectionsPagerAdapter.startWebSocket()
             updateFavoriteTicker()
         }
     }

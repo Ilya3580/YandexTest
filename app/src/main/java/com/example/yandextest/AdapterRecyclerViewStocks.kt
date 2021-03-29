@@ -17,6 +17,7 @@ import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.ItemDecoration
 import com.squareup.picasso.Picasso
+import okhttp3.WebSocket
 import java.lang.Exception
 import java.util.*
 import kotlin.collections.ArrayList
@@ -26,7 +27,9 @@ import kotlin.math.pow
 open class AdapterRecyclerViewStocks(private val values: ArrayList<CellInformation>,//элементы
                                      private var viewModelListFavorite : MyViewModel<ArrayList<String>>,//viewmodel который срабатывает при изменение списка favorite
                                      private var owner : LifecycleOwner,
-                                     private var context: Context) :
+                                     private var context: Context,
+                                     private var viewModelListWebSocket : MyViewModel<ArrayList<StickWebSocket>>,
+                                     private var webSocket: WebSocket) :
     RecyclerView.Adapter<AdapterRecyclerViewStocks.MyViewHolder>() {
 
     protected lateinit var view : View
@@ -92,7 +95,6 @@ open class AdapterRecyclerViewStocks(private val values: ArrayList<CellInformati
         }
 
         checkStars(holder, position)
-
     }
 
     //здесь я добавляю тикер в избранное или удаляю зависит
@@ -207,8 +209,49 @@ open class AdapterRecyclerViewStocks(private val values: ArrayList<CellInformati
             return
         }
         differencePriceTextView.text = "$symbol$number$symbolCurrency ($percent)%"
+
+        //здесь я подписываюсь на обновления нужного мне тикера
+        viewModelListWebSocket.user?.add(StickWebSocket(cellInformation.ticker, 0,cellInformation.price.toFloat()))
+        webSocket.send("{\"type\":\"subscribe\",\"symbol\":\"${cellInformation.ticker}\"}")
+
+        //здесь отслеживаю изменение его цены
+        viewModelListWebSocket.getUsersValue().observe(owner, Observer {
+            if(it.count() > 0) {
+                for(i in it){
+                    if(i.ticker == cellInformation.ticker && i.price != null){
+                        priceTextView.text = i.price.toString() + symbolCurrency
+                        break
+                    }
+                }
+            }
+        })
     }
 
+    //в этой функции я отменяю подписку на viewmodel, но перед этим проверяю нет ли такого тикера. Если есть это значит что этот тикер есть в Favorite
+    //значит мы просто удаляем его из списка а подписку не трогаем
+    override fun onViewDetachedFromWindow(holder: MyViewHolder) {
+        super.onViewDetachedFromWindow(holder)
+        val lst = viewModelListWebSocket.user
+        var flag = true
+        var countItems = 0
+        var index = -1
+        for(i in (0 until (lst?.count() ?: 0))){
+            if(holder.textViewTicker.text == lst!![i].ticker){
+                countItems++
+                if(flag) {
+                    index = i
+                    flag = false
+                }
+            }
+        }
+        if(countItems == 1){
+            webSocket.send("{\"type\":\"unsubscribe\",\"symbol\":\"${holder.textViewTicker.text}\"}")
+        }
+
+        if(!flag){
+            viewModelListWebSocket.user?.removeAt(index)
+        }
+    }
 }
 
 

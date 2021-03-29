@@ -6,9 +6,15 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.observe
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.WebSocket
+import java.util.Observer
 
 //эти два класса ответственны за вкладки в активностях
-class SectionsPagerAdapter(private val context: Context, fm: FragmentManager)
+class SectionsPagerAdapter(private val context: Context, fm: FragmentManager, lifecycleOwner: LifecycleOwner)
     : FragmentPagerAdapter(fm) {
 
     //viewmodel который отвечает за списко favorite мы его передадим в список stock и favorite
@@ -17,11 +23,48 @@ class SectionsPagerAdapter(private val context: Context, fm: FragmentManager)
         get(){ return _viewModelListFavorite }
         set(value) { _viewModelListFavorite = value }
 
+    private lateinit var viewModelListWebSocket: MyViewModel<ArrayList<StickWebSocket>>
+    private lateinit var viewModelInternet : MyViewModel<Boolean>
+    private lateinit var webSocket: WebSocket
+    private lateinit var request : Request
+    private lateinit var listener : Listener
+    private lateinit var client : OkHttpClient
+    private var fragmentS : Fragment? = null
+    private var fragmentF : Fragment? = null
+
     init{
         //здесь я сохраняю спиок favorite viewmodel из директории приложения
         val functionsTickers = FunctionsTickers()
         _viewModelListFavorite = MyViewModel<ArrayList<String>>(functionsTickers.listFavoriteTickers(context))
+        viewModelListWebSocket = MyViewModel(ArrayList())
+
+        viewModelInternet = MyViewModel(true)
+
+        //здесь я отслеживаю пропадает ли интернет и вызываю соответствующую функцию отслежиываю из websocket
+        viewModelInternet.getUsersValue().observe(lifecycleOwner, androidx.lifecycle.Observer {
+            if(it){
+                startWebSocket()
+            }else{
+                if(fragmentS != null){
+                    (fragmentS as FragmentRecyclerViewSection).notInternet()
+                }
+            }
+        })
+
+
     }
+
+    public fun startWebSocket(){
+        //здесь я запускаю websocket
+        request = Request.Builder().url(EnumListName.WEB_SOCKET.value).build()
+        listener = Listener(viewModelListWebSocket, viewModelInternet, context)
+        client = OkHttpClient()
+        webSocket = client.newWebSocket(request, listener)
+        client.dispatcher().executorService().shutdown()
+
+
+    }
+
     //названия вкладок
     val TAB_TITLES = arrayOf(
             R.string.tab_text_1,
@@ -34,9 +77,27 @@ class SectionsPagerAdapter(private val context: Context, fm: FragmentManager)
         //пожалуйста посмотри как это выглядит в приложении потому что получилось красиво
         return if(position == 0)
         {
-            FragmentRecyclerViewSection.newInstance(EnumListName.STOCKS.value, _viewModelListFavorite)
+            if(fragmentS == null) {
+                fragmentS = FragmentRecyclerViewSection.newInstance(
+                    EnumListName.STOCKS.value,
+                    _viewModelListFavorite,
+                    viewModelListWebSocket,
+                    viewModelInternet,
+                    webSocket
+                )
+            }
+            fragmentS!!
         }else{
-            FragmentRecyclerViewSection.newInstance(EnumListName.FAVORITE.value, _viewModelListFavorite)
+            if(fragmentF == null) {
+                fragmentF = FragmentRecyclerViewSection.newInstance(
+                    EnumListName.FAVORITE.value,
+                    _viewModelListFavorite,
+                    viewModelListWebSocket,
+                    viewModelInternet,
+                    webSocket
+                )
+            }
+            fragmentF!!
         }
 
     }
