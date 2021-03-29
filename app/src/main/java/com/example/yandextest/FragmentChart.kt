@@ -494,7 +494,8 @@ class FragmentChart(private var ticker : String) : Fragment() {
         client.dispatcher().executorService().shutdown()
     }
 
-
-
-
+    override fun onPause() {
+        super.onPause()
+        
+    }
 }
