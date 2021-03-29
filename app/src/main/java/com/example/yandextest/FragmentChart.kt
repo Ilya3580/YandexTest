@@ -14,6 +14,8 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
+import android.widget.ImageButton
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
@@ -45,7 +47,7 @@ class FragmentChart(private var ticker : String) : Fragment() {
     private lateinit var lstDataRequestChartClass : ArrayList<StickChartInformation>//спикок с загруженной информацией с интернета
     private lateinit var viewModelWebSocket : MyViewModel<StickWebSocket>//viewmodel который получает сообщения от Listener webSocket
     private var textView : TextView? = null//textView с ценой акций
-    private lateinit var chartIndicator : TextView//этот индикатор при нажатии на него мы меняем тип графика
+    private lateinit var chartIndicator : ImageButton//этот индикатор при нажатии на него мы меняем тип графика
     var symbolPeriod = "D"//начальный символ позже мы его переопределяем на тот который сохранился при просмотре в последний оаз
 
     //следующие пять строк нужны для сохранения информации
@@ -492,10 +494,12 @@ class FragmentChart(private var ticker : String) : Fragment() {
         client = OkHttpClient()
         client.newWebSocket(request, listener)
         client.dispatcher().executorService().shutdown()
+
     }
 
     override fun onPause() {
         super.onPause()
+
 
     }
 }

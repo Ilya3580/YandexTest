@@ -184,13 +184,14 @@
             <androidx.cardview.widget.CardView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                app:cardCornerRadius="10dp"
+                app:cardCornerRadius="5dp"
                 card_view:elevation="0dp"
+                android:layout_margin="5dp"
                 >
-                <TextView
+                <ImageButton
                     android:id = "@+id/indicatorChart"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_width="25dp"
+                    android:layout_height="25dp"
                     android:background="@drawable/ic_baseline_show_chart_24"
                     />
             </androidx.cardview.widget.CardView>
