@@ -31,8 +31,7 @@ class ClassRequests {
 
     //эта функция разбирает json для поиска
     public fun parsQuestionSearch(text : String, context: Context) : HashMap<String, String>{
-        //этой функцией я проверяю не выдало ли api ограничение
-        if(text.contains("[")) {
+        try{
             val hashMap = HashMap<String, String>()
             val json = JSONObject(text)
             val bestMatches = json.getJSONArray("bestMatches")
@@ -41,10 +40,10 @@ class ClassRequests {
                 hashMap[l.get("1. symbol").toString()] = l.get("2. name").toString()
             }
             return convertList(hashMap)
-        }else{
+        }catch (e : Exception){
             val handler = Handler(Looper.getMainLooper())
             handler.post {
-                Toast.makeText(context, "Ограничение api положалуйста повторите запрос позже", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, "Require api", Toast.LENGTH_LONG).show()
             }
 
             return convertList(HashMap())
@@ -74,42 +73,51 @@ class ClassRequests {
     }
     //эта функция разбирает json и сохраняет информацию о компании
     public fun parsTickersData(text: String, lst : ArrayList<CellInformation>, context: Context){
-        if(text.contains("error")){
-            return
-        }
-        val json = JSONArray(text)
-        for(i in (0 until json.length())) {
-            val ticker = json.getJSONObject(i).get("symbol")
-            val company = json.getJSONObject(i).get("shortName").toString()
-            val price = json.getJSONObject(i).get("regularMarketPrice").toString()
-            val differencePrice = json.getJSONObject(i).get("regularMarketChange").toString()
-            val differencePricePercent = json.getJSONObject(i).get("regularMarketChangePercent").toString()
-            val currency = json.getJSONObject(i).get("currency").toString()
-            for(j in (0 until lst.count())){
-                if(lst[j].ticker == ticker){
-                    lst[j].company = company
-                    lst[j].price = price
-                    lst[j].differencePrice = differencePrice
-                    lst[j].differencePricePercent = differencePricePercent
-                    lst[j].currency = currency
-                    saveTicker(lst[j], context)
+        try {
+            val json = JSONArray(text)
+            for (i in (0 until json.length())) {
+                val ticker = json.getJSONObject(i).get("symbol")
+                val company = json.getJSONObject(i).get("shortName").toString()
+                val price = json.getJSONObject(i).get("regularMarketPrice").toString()
+                val differencePrice = json.getJSONObject(i).get("regularMarketChange").toString()
+                val differencePricePercent =
+                    json.getJSONObject(i).get("regularMarketChangePercent").toString()
+                val currency = json.getJSONObject(i).get("currency").toString()
+                for (j in (0 until lst.count())) {
+                    if (lst[j].ticker == ticker) {
+                        lst[j].company = company
+                        lst[j].price = price
+                        lst[j].differencePrice = differencePrice
+                        lst[j].differencePricePercent = differencePricePercent
+                        lst[j].currency = currency
+                        saveTicker(lst[j], context)
+                    }
                 }
+            }
+        }catch (e : Exception){
+            val handler = Handler(Looper.getMainLooper())
+            handler.post {
+                Toast.makeText(context, "Require api", Toast.LENGTH_LONG).show()
             }
         }
     }
     //эта функция разбирает json и возвращает список зар=груженных тикеров
     public fun parsCheckURL(text : String, context: Context) : ArrayList<String>{
-        if(text.contains("error")){
-            Toast.makeText(context, "require api", Toast.LENGTH_SHORT).show()
+        try {
+            sPref = context.getSharedPreferences(REQUESTS, Context.MODE_PRIVATE)
+            val lst = ArrayList<String>()
+            val json = JSONArray(text).getJSONObject(0).getJSONArray("quotes")
+            for (i in (0 until json.length())) {
+                lst.add(json.getString(i))
+            }
+            return convertList(lst)
+        }catch (e : Exception){
+            val handler = Handler(Looper.getMainLooper())
+            handler.post {
+                Toast.makeText(context, "Require api", Toast.LENGTH_LONG).show()
+            }
             return ArrayList()
         }
-        sPref = context.getSharedPreferences(REQUESTS, Context.MODE_PRIVATE)
-        val lst = ArrayList<String>()
-        val json = JSONArray(text).getJSONObject(0).getJSONArray("quotes")
-        for(i in (0 until json.length())) {
-            lst.add(json.getString(i))
-        }
-        return convertList(lst)
     }
     //эта функция сохраняет список тикеров
     public fun saveList(context: Context, lst : ArrayList<String>){

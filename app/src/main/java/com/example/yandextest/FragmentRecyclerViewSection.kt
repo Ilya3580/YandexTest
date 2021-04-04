@@ -76,6 +76,7 @@ class FragmentRecyclerViewSection(
         }
 
 
+
         return myView
     }
 
@@ -239,34 +240,34 @@ class FragmentRecyclerViewSection(
 
     //эта функция вызывается если нет интернета
     public fun notInternet(){
-        if(!flagShowNotInternet) {
-            flagShowNotInternet = true
             val handler = Handler(Looper.getMainLooper())
             handler.post {
-                showSaveData()
-                if (mainActivity != null)
-                    mainActivity!!.stopProgressBar()
-                val alert = InternetFunctions.alertDialog(requireContext())
-                //запускаю поток который проверяет чтопоявился интрнет или нет
-                //если появился то обновляю данные по новой
-                Thread(Runnable {
-                    while (true) {
-                        if (InternetFunctions.hasConnection(requireContext())) {
-                            val handler1 = Handler(Looper.getMainLooper())
-                            handler1.post {
-                                viewModelInternet.user = true
-                                viewModelInternet.getUsersValue()
-                                alert.create().dismiss()
-                                settingStocks()
-                                if (mainActivity != null)
-                                    mainActivity!!.startProgressBar()
+                if(!flagShowNotInternet) {
+                    flagShowNotInternet = true
+                    showSaveData()
+                    if (mainActivity != null)
+                        mainActivity!!.stopProgressBar()
+                    val alert = InternetFunctions.alertDialog(requireContext())
+                    //запускаю поток который проверяет появился интрнет или нет
+                    //если появился то обновляю данные по новому
+                    Thread(Runnable {
+                        while (true) {
+                            if (InternetFunctions.hasConnection(requireContext())) {
+                                val handler1 = Handler(Looper.getMainLooper())
+                                handler1.post {
+                                    viewModelInternet.user = true
+                                    viewModelInternet.getUsersValue()
+                                    alert.create().dismiss()
+                                    settingStocks()
+                                    if (mainActivity != null)
+                                        mainActivity!!.startProgressBar()
+                                }
+                                break
                             }
-                            break
                         }
-                    }
-                }).start()
+                    }).start()
+                }
             }
-        }
     }
 
     //если нет итернета то чтобы списки не были пустыми я показываю то что было сохраненно в последний раз

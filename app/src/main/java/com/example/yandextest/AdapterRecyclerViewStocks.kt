@@ -8,10 +8,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageButton
-import android.widget.ImageView
-import android.widget.LinearLayout
-import android.widget.TextView
+import android.widget.*
 import androidx.lifecycle.*
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.RecyclerView
@@ -69,22 +66,10 @@ open class AdapterRecyclerViewStocks(private val values: ArrayList<CellInformati
         //эта функция устанавливает инфу с процентным изменение цены
         settingTextViewDifferencePrice(holder.textViewDifferencePrice, holder.textViewPrice, values[position])
 
-        //здесь я подгружаю картинки. Вы наверное обратили внимание, что картинки загружены не все это связанно с ограничение api
-        //finnhub предоставляет инфу с картинками, но всего 60 запросов в минуту, но я заметил, что почти все ссылки на картинки одинаковы меняется только тикер
-        //поэтому я не стал отправлять запрос а сразу создаю ссылку и в конце просто заменя тикер
-        //но это работает не со всеми тикерами
-        //я надеюсь что то что я сделал с картинками даст вам понять что с платным api я сделал бы все нормально
         if(values[position].ticker == "YNDX") {//картинку яндекса я использую также в качестве иконки приложения так что пусть она же и будет картинкой для тикера
             holder.imageLogo.setImageDrawable(context.resources.getDrawable(R.drawable.icon))
         }else{
-            Picasso.get()
-                .load(
-                    EnumListName.PICASSO_URL.value.replace(
-                        EnumListName.MY_SYMBOL.value,
-                        values[position].ticker
-                    )
-                )
-                .into(holder.imageLogo)
+            loadImage(holder, position)
         }
 
         //здесь я обратываю нажатие на звездочку
@@ -95,6 +80,21 @@ open class AdapterRecyclerViewStocks(private val values: ArrayList<CellInformati
         }
 
         checkStars(holder, position)
+    }
+
+    // подгружаю картинки, картинки загрузятся не все потому что некоторых ссылок в api нету
+    //это связанно с тем, что большая часть ссылок на картинок отличаются только тикером
+    //но не которые ссылки этому не соответствуют, поэтому подгрузятся не все
+    //это сделанно для того чтобы ограничение api не влияло на chartActivity
+    private fun loadImage(holder: MyViewHolder, position: Int){
+        Picasso.get()
+            .load(
+                EnumListName.PICASSO_URL.value.replace(
+                    EnumListName.MY_SYMBOL.value,
+                    values[position].ticker
+                )
+            )
+            .into(holder.imageLogo)
     }
 
     //здесь я добавляю тикер в избранное или удаляю зависит
@@ -126,33 +126,6 @@ open class AdapterRecyclerViewStocks(private val values: ArrayList<CellInformati
             holder.starButton.setImageDrawable(context.resources.getDrawable(android.R.drawable.btn_star_big_off))
         })
     }
-
-    class MyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        var textViewTicker : TextView
-            get() {return field }
-        var textViewCompany : TextView
-            get() {return field }
-        var textViewPrice : TextView
-            get() {return field }
-        var textViewDifferencePrice : TextView
-            get() {return field }
-        var containerView : LinearLayout
-            get() {return field}
-        var starButton : ImageButton
-            get() {return field}
-        var imageLogo : ImageView
-        init {
-            imageLogo = itemView.findViewById(R.id.logo)
-            textViewTicker = itemView.findViewById(R.id.ticker)
-            textViewCompany = itemView.findViewById(R.id.company)
-            textViewPrice = itemView.findViewById(R.id.price)
-            textViewDifferencePrice = itemView.findViewById(R.id.difference_price)
-            containerView = itemView.findViewById(R.id.containerCellRecyclerView)
-            starButton = itemView.findViewById(R.id.buttonStars)
-
-        }
-    }
-
 
     //здесь я устанавливаю значение в текст с процентным изменением цены, определяю цвет, знак пллюс иди минус и значек валюты
     private fun settingTextViewDifferencePrice(differencePriceTextView : TextView, priceTextView: TextView, cellInformation : CellInformation){
@@ -186,21 +159,19 @@ open class AdapterRecyclerViewStocks(private val values: ArrayList<CellInformati
 
         //для определения значка валюты я использую встроенную библиотеку Currency
         var currency : Currency
-        var defaultFactoryDigit : Int = 1//это число содержит сколько цифр обычно используют для округления в этой стране
         var symbolCurrency : String = ""
         try {
             if (cellInformation.currency != "null") {
                 currency = Currency.getInstance(cellInformation.currency)
-                defaultFactoryDigit = currency.defaultFractionDigits
                 symbolCurrency = currency.symbol
             }
         }catch (e : Exception){
             Log.d("TAGA", cellInformation.currency)
         }
 
-        defaultFactoryDigit = 10.0.pow(defaultFactoryDigit).toInt()
+        createWebSocket(cellInformation, priceTextView, symbolCurrency)
 
-        percent = (percent * defaultFactoryDigit).toInt().toDouble() / defaultFactoryDigit
+        percent = (percent * 100).toInt().toDouble() / 100
         number = (number * 100).toInt().toDouble() / 100
 
         priceTextView.text = "${cellInformation.price}$symbolCurrency"
@@ -210,12 +181,21 @@ open class AdapterRecyclerViewStocks(private val values: ArrayList<CellInformati
         }
         differencePriceTextView.text = "$symbol$number$symbolCurrency ($percent)%"
 
+
+    }
+
+    private fun createWebSocket(cellInformation: CellInformation, priceTextView: TextView, symbolCurrency : String){
         //здесь я подписываюсь на обновления нужного мне тикера
         viewModelListWebSocket.user?.add(StickWebSocket(cellInformation.ticker, 0,cellInformation.price.toFloat()))
         webSocket.send("{\"type\":\"subscribe\",\"symbol\":\"${cellInformation.ticker}\"}")
 
         //здесь отслеживаю изменение его цены
         viewModelListWebSocket.getUsersValue().observe(owner, Observer {
+            var str = ""
+            for(i in viewModelListWebSocket.user!!){
+                str += " " + i.ticker
+            }
+            Log.d("TAGA", str)
             if(it.count() > 0) {
                 for(i in it){
                     if(i.ticker == cellInformation.ticker && i.price != null){
@@ -231,12 +211,17 @@ open class AdapterRecyclerViewStocks(private val values: ArrayList<CellInformati
     //значит мы просто удаляем его из списка а подписку не трогаем
     override fun onViewDetachedFromWindow(holder: MyViewHolder) {
         super.onViewDetachedFromWindow(holder)
+        unsubscribe(holder.textViewTicker.text.toString())
+    }
+
+    //здесь я отменяю подписки, но не все если в списке будет два одинаковых тикера это значит что тикер есть в двух вкладках и подписку отменять нельзя
+    open fun unsubscribe(ticker: String){
         val lst = viewModelListWebSocket.user
         var flag = true
         var countItems = 0
         var index = -1
         for(i in (0 until (lst?.count() ?: 0))){
-            if(holder.textViewTicker.text == lst!![i].ticker){
+            if(ticker == lst!![i].ticker){
                 countItems++
                 if(flag) {
                     index = i
@@ -245,13 +230,40 @@ open class AdapterRecyclerViewStocks(private val values: ArrayList<CellInformati
             }
         }
         if(countItems == 1){
-            webSocket.send("{\"type\":\"unsubscribe\",\"symbol\":\"${holder.textViewTicker.text}\"}")
+            webSocket.send("{\"type\":\"unsubscribe\",\"symbol\":\"${ticker}\"}")
         }
 
         if(!flag){
             viewModelListWebSocket.user?.removeAt(index)
         }
     }
+
+    class MyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        var textViewTicker : TextView
+            get() {return field }
+        var textViewCompany : TextView
+            get() {return field }
+        var textViewPrice : TextView
+            get() {return field }
+        var textViewDifferencePrice : TextView
+            get() {return field }
+        var containerView : LinearLayout
+            get() {return field}
+        var starButton : ImageButton
+            get() {return field}
+        var imageLogo : ImageView
+        init {
+            imageLogo = itemView.findViewById(R.id.logo)
+            textViewTicker = itemView.findViewById(R.id.ticker)
+            textViewCompany = itemView.findViewById(R.id.company)
+            textViewPrice = itemView.findViewById(R.id.price)
+            textViewDifferencePrice = itemView.findViewById(R.id.difference_price)
+            containerView = itemView.findViewById(R.id.containerCellRecyclerView)
+            starButton = itemView.findViewById(R.id.buttonStars)
+
+        }
+    }
+
 }
 
 

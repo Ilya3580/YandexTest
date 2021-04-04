@@ -73,11 +73,14 @@ class Listener(
 
 
     //здесь запускаю подписки webcoket
+    //также подписки я запускаю из adapter, а здесь они нужны для того чтобы подписки заработали после выключения и включения интернета
     override fun onOpen(webSocket: WebSocket, response: Response) {
-        for(i in (0 until (viewModel.user?.count() ?: 0))){
-            webSocket.send("{\"type\":\"subscribe\",\"symbol\":\"${viewModel.user!![i].ticker}\"}")
-        }
         Log.d("TAGA", "onOpen")
+        var str = ""
+        for(i in viewModel.user!!){
+            str += " " + i.ticker
+        }
+        Log.d("TAGA", str)
 
     }
     //здесь запускаю получаю от него сообщения
@@ -102,7 +105,7 @@ class Listener(
 
     }
 
-    //здесь я разбираю сообщение и передаю его в viewmodel
+    //здесь я разбираю сообщение и передаю его в viewmodel, который в adapter
     private fun parsDateWebSocket(message: String) {
         if (message.contains("ping") or message.contains("Invalid")) {
             return

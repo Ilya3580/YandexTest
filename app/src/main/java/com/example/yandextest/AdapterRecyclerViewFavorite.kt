@@ -41,6 +41,7 @@ class AdapterRecyclerViewFavorite(private val values: ArrayList<CellInformation>
         functionsTickers.delayTickerFavorite(position, context)
         viewModelListFavorite.user = functionsTickers.listFavoriteTickers(context)
         viewModelListFavorite.getUsersValue()
+
     }
 
 

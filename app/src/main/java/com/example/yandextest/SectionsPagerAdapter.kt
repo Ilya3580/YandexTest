@@ -40,11 +40,13 @@ class SectionsPagerAdapter(private val context: Context, fm: FragmentManager, li
 
         viewModelInternet = MyViewModel(true)
 
-        //здесь я отслеживаю пропадает ли интернет и вызываю соответствующую функцию отслежиываю из websocket
+        //здесь я отслеживаю пропадает ли интернет и вызываю соответствующую функцию. Сообщение что нет интернета приходит из websocket
         viewModelInternet.getUsersValue().observe(lifecycleOwner, androidx.lifecycle.Observer {
             if(it){
+                Log.d("TAGA", "InternetConnect")
                 startWebSocket()
             }else{
+                Log.d("TAGA", "NotInernet")
                 if(fragmentS != null){
                     (fragmentS as FragmentRecyclerViewSection).notInternet()
                 }

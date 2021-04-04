@@ -17,6 +17,7 @@ import androidx.fragment.app.Fragment
 import okhttp3.*
 import org.json.JSONObject
 import java.io.IOException
+import java.lang.Exception
 
 //этот фрагмент отвечает за все остальные вкладки которые есть в chartactivity
 class FragmentInformation(private var ticker : String, private var type : String) : Fragment() {
@@ -62,13 +63,22 @@ class FragmentInformation(private var ticker : String, private var type : String
                     val handler = Handler(Looper.getMainLooper())
                     handler.post {
                         //в зависимости от типа вызываю нужную функцию
-                        when(type){
-                            requireContext().resources.getString(R.string.summary) -> listInformation = parsDataSummary(body)
-                            requireContext().resources.getString(R.string.recommendation) -> listInformation = parsDataRecommendation(body)
-                            requireContext().resources.getString(R.string.newsSentiment) -> listInformation = parsDataNewsSentiment(body)
-                            requireContext().resources.getString(R.string.news) -> listInformation = parsDataNews(body)
+                        try {
+                            when (type) {
+                                requireContext().resources.getString(R.string.summary) -> listInformation =
+                                    parsDataSummary(body)
+                                requireContext().resources.getString(R.string.recommendation) -> listInformation =
+                                    parsDataRecommendation(body)
+                                requireContext().resources.getString(R.string.newsSentiment) -> listInformation =
+                                    parsDataNewsSentiment(body)
+                                requireContext().resources.getString(R.string.news) -> listInformation =
+                                    parsDataNews(body)
+                            }
+                            //и передаю список в adapter
+                        }catch (e : Exception){
+                            Toast.makeText(context, "Require api", Toast.LENGTH_LONG).show()
                         }
-                        //и передаю список в adapter
+
                         listView.adapter = Adapter(listInformation, requireContext())
                     }
                 }
