@@ -75,17 +75,13 @@ class Listener(
     //здесь запускаю подписки webcoket
     //также подписки я запускаю из adapter, а здесь они нужны для того чтобы подписки заработали после выключения и включения интернета
     override fun onOpen(webSocket: WebSocket, response: Response) {
-        Log.d("TAGA", "onOpen")
-        var str = ""
         for(i in viewModel.user!!){
-            str += " " + i.ticker
+            webSocket.send("{\"type\":\"subscribe\",\"symbol\":\"${i.ticker}\"}")
         }
-        Log.d("TAGA", str)
 
     }
     //здесь запускаю получаю от него сообщения
     override fun onMessage(webSocket: WebSocket, message: String) {
-        Log.d("TAGA", message.toString())
         parsDateWebSocket(message)
     }
 
@@ -95,7 +91,6 @@ class Listener(
     //здесь если просиходит ошибка то проверяю если нет интернета то возвращаю в начальную активность
     override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
         if(!InternetFunctions.hasConnection(context)){
-            Log.d("TAGA", "FAIL")
             val handler = Handler(Looper.getMainLooper())
             handler.post {
                 viewModelInternet.user = false

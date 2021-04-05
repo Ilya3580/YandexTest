@@ -35,7 +35,7 @@ class SectionsPagerAdapter(private val context: Context, fm: FragmentManager, li
     init{
         //здесь я сохраняю спиок favorite viewmodel из директории приложения
         val functionsTickers = FunctionsTickers()
-        _viewModelListFavorite = MyViewModel<ArrayList<String>>(functionsTickers.listFavoriteTickers(context))
+        _viewModelListFavorite = MyViewModel(functionsTickers.listFavoriteTickers(context))
         viewModelListWebSocket = MyViewModel(ArrayList())
 
         viewModelInternet = MyViewModel(true)
@@ -43,12 +43,11 @@ class SectionsPagerAdapter(private val context: Context, fm: FragmentManager, li
         //здесь я отслеживаю пропадает ли интернет и вызываю соответствующую функцию. Сообщение что нет интернета приходит из websocket
         viewModelInternet.getUsersValue().observe(lifecycleOwner, androidx.lifecycle.Observer {
             if(it){
-                Log.d("TAGA", "InternetConnect")
+                viewModelListWebSocket.user = ArrayList()
                 startWebSocket()
-            }else{
-                Log.d("TAGA", "NotInernet")
-                if(fragmentS != null){
-                    (fragmentS as FragmentRecyclerViewSection).notInternet()
+                if(fragmentS != null && fragmentF != null){
+                    (fragmentF as FragmentRecyclerViewSection).setWebSocket(webSocket)
+                    (fragmentS as FragmentRecyclerViewSection).setWebSocket(webSocket)
                 }
             }
         })
@@ -62,9 +61,6 @@ class SectionsPagerAdapter(private val context: Context, fm: FragmentManager, li
         listener = Listener(viewModelListWebSocket, viewModelInternet, context)
         client = OkHttpClient()
         webSocket = client.newWebSocket(request, listener)
-        client.dispatcher().executorService().shutdown()
-
-
     }
 
     //названия вкладок

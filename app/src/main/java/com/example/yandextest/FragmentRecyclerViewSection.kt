@@ -1,5 +1,6 @@
 package com.example.yandextest
 
+import android.app.AlertDialog
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -14,6 +15,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import okhttp3.*
 import java.io.IOException
+import kotlin.concurrent.thread
 
 //этот фрагмент отвечает за списки stock и favorite
 //в кончтрукторе мы получаем viewmodel и тип
@@ -26,6 +28,7 @@ class FragmentRecyclerViewSection(
     private var viewModelInternet : MyViewModel<Boolean>,
     private var webSocket: WebSocket) : Fragment() {
 
+    private var alertNotInternet : AlertDialog? = null
     private lateinit var recyclerView : RecyclerView//recyclerview с нашими объектами
     private lateinit var myView : View
     private lateinit var lst : ArrayList<CellInformation>//список в котором хранится вся инфа о компаниях
@@ -33,6 +36,21 @@ class FragmentRecyclerViewSection(
     private lateinit var lstTickers : ArrayList<String>//список тикеров
     private var flagShowNotInternet = false//это нужно чтобы показывать сообщение один раз что нет интернета
     //потому что может произойти так что интренет пропадет когда будут два потоко обрабатывать информацию и оба дадут понять что нет интрнета
+
+    public fun setWebSocket(webSocket : WebSocket){
+        this.webSocket = webSocket
+        try {
+            if (valueStocksOrFavorite == EnumListName.STOCKS.value) {
+                (recyclerView.adapter as AdapterRecyclerViewStocks).setWebSocket(webSocket)
+            } else {
+                (recyclerView.adapter as AdapterRecyclerViewFavorite).setWebSocket(webSocket)
+            }
+        }catch (e : Exception){
+
+        }
+
+    }
+
 
     companion object {
         fun newInstance(valueStocksOrFavorite : String, viewModelListFavorite : MyViewModel<ArrayList<String>>, viewModelListWebSocket : MyViewModel<ArrayList<StickWebSocket>>, viewModelInternet : MyViewModel<Boolean>, webSocket: WebSocket)
@@ -60,6 +78,7 @@ class FragmentRecyclerViewSection(
         //здесь я определяю какой тип списка должен быть у нас
         if(valueStocksOrFavorite == EnumListName.STOCKS.value){
             settingStocks()
+            internetCheck()
         }else{
             settingFavorite()
             //список favorite я создаю сразу потому что список избранных тикеров сохранен в памяти устройства
@@ -108,9 +127,6 @@ class FragmentRecyclerViewSection(
             }
 
             override fun onFailure(call: Call, e: IOException) {
-                if(!InternetFunctions.hasConnection(requireContext())){
-                    notInternet()
-                }
             }
         })
     }
@@ -208,9 +224,6 @@ class FragmentRecyclerViewSection(
             }
 
             override fun onFailure(call: Call, e: IOException) {
-                if(!InternetFunctions.hasConnection(requireContext())){
-                    notInternet()
-                }
             }
         })
     }
@@ -238,36 +251,53 @@ class FragmentRecyclerViewSection(
 
     }
 
-    //эта функция вызывается если нет интернета
-    public fun notInternet(){
-            val handler = Handler(Looper.getMainLooper())
-            handler.post {
-                if(!flagShowNotInternet) {
-                    flagShowNotInternet = true
-                    showSaveData()
-                    if (mainActivity != null)
-                        mainActivity!!.stopProgressBar()
-                    val alert = InternetFunctions.alertDialog(requireContext())
-                    //запускаю поток который проверяет появился интрнет или нет
-                    //если появился то обновляю данные по новому
-                    Thread(Runnable {
-                        while (true) {
-                            if (InternetFunctions.hasConnection(requireContext())) {
-                                val handler1 = Handler(Looper.getMainLooper())
-                                handler1.post {
-                                    viewModelInternet.user = true
-                                    viewModelInternet.getUsersValue()
-                                    alert.create().dismiss()
-                                    settingStocks()
-                                    if (mainActivity != null)
-                                        mainActivity!!.startProgressBar()
-                                }
-                                break
-                            }
-                        }
-                    }).start()
+    //запускаем поток который будет ослеживать есть ли интернет или нету если нету то он вызовет функцию notInternet
+    public fun internetCheck(){
+        Thread(Runnable {
+            while (true) {
+                if (!InternetFunctions.hasConnection(requireContext())) {
+                    notInternet()
                 }
             }
+        }).start()
+
+
+    }
+
+    //в этой функции показывается диалоговое окно что нет интернета и запускается поток который отслеживает его появление
+    private fun notInternet(){
+        val handler = Handler(Looper.getMainLooper())
+        handler.post {
+            if(!flagShowNotInternet) {
+                flagShowNotInternet = true
+                showSaveData()
+                if (mainActivity != null)
+                    mainActivity!!.stopProgressBar()
+                alertNotInternet = InternetFunctions.alertDialog(requireContext()).create()
+                //запускаю поток который проверяет появился интрнет или нет
+                //если появился то обновляю данные по новому
+                Thread(Runnable {
+                    while (true) {
+                        if (InternetFunctions.hasConnection(requireContext())) {
+                            val handler1 = Handler(Looper.getMainLooper())
+                            handler1.post {
+                                flagShowNotInternet = false
+                                viewModelInternet.user = true
+                                viewModelInternet.getUsersValue()
+                                if(alertNotInternet != null) {
+                                    alertNotInternet!!.dismiss()
+                                }
+                                settingStocks()//я вызываю только настройки вкладки stocks потому что там я загружаю данные для двух вкладок
+
+                                if (mainActivity != null)
+                                    mainActivity!!.startProgressBar()
+                            }
+                            break
+                        }
+                    }
+                }).start()
+            }
+        }
     }
 
     //если нет итернета то чтобы списки не были пустыми я показываю то что было сохраненно в последний раз

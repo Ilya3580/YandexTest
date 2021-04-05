@@ -35,13 +35,19 @@
                 app:cardCornerRadius="5dp"
                 card_view:elevation="0dp"
                 android:layout_margin="5dp"
+                android:background="@color/white"
                 >
-                <ImageButton
-                    android:id = "@+id/indicatorChart"
-                    android:layout_width="25dp"
-                    android:layout_height="25dp"
-                    android:background="@drawable/ic_baseline_show_chart_24"
-                    />
+                <LinearLayout
+                    android:background="@color/light_gray"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+                    <ImageButton
+                        android:id = "@+id/indicatorChart"
+                        android:layout_width="25dp"
+                        android:layout_height="25dp"
+                        android:background="@drawable/ic_baseline_show_chart_24"
+                        />
+                </LinearLayout>
             </androidx.cardview.widget.CardView>
 
         </LinearLayout>

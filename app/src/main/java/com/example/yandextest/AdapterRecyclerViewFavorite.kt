@@ -21,6 +21,9 @@ class AdapterRecyclerViewFavorite(private val values: ArrayList<CellInformation>
                                   private var webSocket: WebSocket
 ) : AdapterRecyclerViewStocks(values, viewModelListFavorite, owner, context, viewModelListWebSocket, webSocket), ItemTouchHelperAdapter{
 
+    override fun setWebSocket(webSocket: WebSocket) {
+        this.webSocket = webSocket
+    }
 
     //переопределяю клик на звездочку и удаляю из списка
     override fun onClick(functionsTickers: FunctionsTickers, position: Int, holder: MyViewHolder) {

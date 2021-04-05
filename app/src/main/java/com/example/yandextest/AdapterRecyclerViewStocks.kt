@@ -31,6 +31,11 @@ open class AdapterRecyclerViewStocks(private val values: ArrayList<CellInformati
 
     protected lateinit var view : View
 
+    public open fun setWebSocket(webSocket : WebSocket){
+        this.webSocket = webSocket
+
+    }
+
     override fun getItemCount() = values.size
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MyViewHolder {
@@ -191,11 +196,6 @@ open class AdapterRecyclerViewStocks(private val values: ArrayList<CellInformati
 
         //здесь отслеживаю изменение его цены
         viewModelListWebSocket.getUsersValue().observe(owner, Observer {
-            var str = ""
-            for(i in viewModelListWebSocket.user!!){
-                str += " " + i.ticker
-            }
-            Log.d("TAGA", str)
             if(it.count() > 0) {
                 for(i in it){
                     if(i.ticker == cellInformation.ticker && i.price != null){
