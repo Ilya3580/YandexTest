@@ -85,11 +85,7 @@ class FragmentInformation(private var ticker : String, private var type : String
             }
 
             override fun onFailure(call: Call, e: IOException) {
-                //так же проверяю наличие интернета
-                if(!InternetFunctions.hasConnection(requireContext())){
-                    val intent = Intent(requireContext(), MainActivity::class.java)
-                    requireContext().startActivity(intent)
-                }
+
             }
         })
         return myView

@@ -304,11 +304,7 @@ class FragmentChart(private var ticker : String) : Fragment() {
             }
 
             override fun onFailure(call: Call, e: IOException) {
-                //если во время обновления пропадает интернет то возвращаю на начальную активность
-                if(!InternetFunctions.hasConnection(requireContext())){
-                    val intent = Intent(requireContext(), MainActivity::class.java)
-                    requireContext().startActivity(intent)
-                }
+
             }
         })
     }

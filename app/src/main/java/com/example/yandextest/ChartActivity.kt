@@ -58,6 +58,8 @@ class ChartActivity : AppCompatActivity() {
         //сохраняю тикер которые нам передали из другой активности
         ticker = intent.extras?.get("TICKER").toString()
 
+        internetCheck()
+
         onCreateViewPager()
 
         settingStart()
@@ -212,6 +214,20 @@ class ChartActivity : AppCompatActivity() {
     private fun loadAppBar(){
         textViewTicker.text = cellInformation.ticker
         textViewCompany.text = cellInformation.company
+    }
+
+    public fun internetCheck(){
+        Thread(Runnable {
+            while (true) {
+                if (!InternetFunctions.hasConnection(applicationContext)) {
+                    val intent = Intent(this, MainActivity :: class.java)
+                    startActivity(intent)
+                    break
+                }
+            }
+        }).start()
+
+
     }
 
 }

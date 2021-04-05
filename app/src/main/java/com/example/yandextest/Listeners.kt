@@ -35,14 +35,7 @@ class ListenerChart(
 
     //здесь если просиходит ошибка то проверяю если нет интернета то возвращаю в начальную активность
     override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
-        if (!InternetFunctions.hasConnection(context)) {
-            val handler = Handler(Looper.getMainLooper())
-            handler.post {
-                val intent = Intent(context, MainActivity::class.java)
-                context.startActivity(intent)
-            }
 
-        }
     }
 
     //здесь я разбираю сообщение и передаю его в viewmodel
@@ -90,13 +83,7 @@ class Listener(
 
     //здесь если просиходит ошибка то проверяю если нет интернета то возвращаю в начальную активность
     override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
-        if(!InternetFunctions.hasConnection(context)){
-            val handler = Handler(Looper.getMainLooper())
-            handler.post {
-                viewModelInternet.user = false
-                viewModelInternet.getUsersValue()
-            }
-        }
+
 
     }
 
