@@ -1,6 +1,7 @@
 package com.example.yandextest
 // здесь я храню спико запрсов, имен, и т.д.
 enum class EnumListName(val value: String) {
+    
     KEY_MBOUM("Z9St2YmOOVfKwXNp8uncdXmBLqUqEynMfeKLJwIB4CJZsK1LU6Xnu5pDhZYy"),
     KEY_FINNHUB("c1gebin48v6p69n8u4t0"),
     KEY_ALPHAVANTAGE("IONIFB3VXWUN4RMW"),
